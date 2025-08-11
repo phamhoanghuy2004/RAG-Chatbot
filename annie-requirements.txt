@@ -1,0 +1,12 @@
+docling==2.43.0
+Django==5.2.5
+qdrant-client==1.15.1
+langchain==0.3.27
+langchain-community==0.3.27
+langchain-core==0.3.74
+langchain-groq==0.3.7
+langchain-huggingface==0.3.1
+langchain-openai==0.3.29
+langchain-qdrant==0.2.0
+redis==6.4.0
+sentence-transformers==5.1.0
