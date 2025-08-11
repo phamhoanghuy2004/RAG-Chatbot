@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>RAG CHATBOT</title>
+  <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <!-- ✅ Thêm thư viện Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+</head>
+
+<body>
+  <!-- Popup xác nhận -->
+  <div id="customConfirm" class="popup-overlay">
+    <div class="popup-box">
+      <h2>📄 Quy định đặt tên file</h2>
+      <p>Vui lòng đặt tên file theo định dạng:<br>
+        <strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>
+      </p>
+      <div class="popup-actions">
+        <button id="confirmYes">Tiếp tục</button>
+        <button id="confirmNo" class="cancel">Hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup thông báo -->
+  <div id="customAlert" class="popup-overlay">
+    <div class="popup-box">
+      <h2 id="alertTitle"></h2>
+      <p id="alertMessage"></p>
+      <div class="popup-actions">
+        <button id="alertOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chatgpt-greeting" id="chat-greeting">
+    <span>👋 XIN CHÀO, BẠN MUỐN MÌNH HƯỚNG DẪN TÀI LIỆU NÀO?</span>
+  </div>
+  <div class="chatgpt-container">
+    <div class="chatgpt-header">
+      <div class="header-left">
+        <i class="fa-solid fa-robot"></i>
+        <span>RAG CHATBOT</span>
+      </div>
+      <div class="doc-select-group">
+        <span>BẠN ĐANG LÀM VIỆC VỚI TÀI LIỆU NÀO:</span>
+        <select id="doc-select">
+          <option value="">Chọn tài liệu</option>
+          {% for doc in docs %}
+          <option value="{{ doc }}">{{ doc }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <form id="upload-form" enctype="multipart/form-data" method="post" class="upload-form">
+        <span id="file-name" class="file-name"></span>
+
+        <!-- Input file ẩn -->
+        <input type="file" id="realFileInput" name="pdf" accept="application/pdf" hidden>
+
+        <!-- Nút phụ để xác nhận -->
+        <button type="button" id="chooseFileBtn" class="upload-label" title="Chọn PDF">
+          <i class="fa-solid fa-paperclip"></i>
+        </button>
+
+        <button type="submit" class="upload-btn" title="Tải PDF"><i class="fa-solid fa-upload"></i></button>
+      </form>
+    </div>
+    <div class="chatgpt-box" id="chat-box">
+      <!-- Tin nhắn sẽ append ở đây -->
+    </div>
+    <div id="loading-dots" class="loading-dots" style="display: none;">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <form id="chat-form" class="chatgpt-input-form">
+      <span class="model-label">Model</span>
+      <select id="model-select" class="model-select">
+        <option value="gemma2-9b-it">gemma2</option>
+        <option value="llama-3.1-8b-instant">llama-3.1</option>
+        <option value="llama-3.3-70b-versatile">llama-3.3</option>
+        <option value="compare:gemma2-9b-itVSllama-3.1-8b-instant">gemma2 VS llama-3.1</option>
+        <option value="compare:gemma2-9b-itVSllama-3.3-70b-versatile">gemma2 VS llama-3.3</option>
+        <option value="compare:llama-3.1-8b-instantVSllama-3.3-70b-versatile">llama-3.1 VS llama-3.3</option>
+      </select>
+      <input type="text" id="user-input" placeholder="Nhập câu hỏi..." autocomplete="off">
+      <button type="submit" title="Gửi"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+    <div id="loading-spinner" class="spinner-overlay" style="display:none;">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/chat.js' %}"></script>
+</body>
+
+</html>

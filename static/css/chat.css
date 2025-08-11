@@ -1,0 +1,667 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.chatgpt-container {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
+  min-height: 100vh;
+  background: #343541;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #444654;
+}
+
+.chatgpt-header {
+  background: #202123;
+  color: #fff;
+  padding: 18px 28px;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444654;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+}
+
+.upload-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-label {
+  cursor: pointer;
+  color: #fff;
+  font-size: 20px;
+  margin-right: 2px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+
+  /* Xóa viền và nền mặc định của button */
+  border: none;
+  background: none;
+  padding: 0;
+  outline: none;
+}
+
+.upload-label:hover {
+  color: #19c37d;
+}
+
+.upload-btn {
+  background: #19c37d;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.upload-btn:hover {
+  background: #13a06b;
+}
+
+.chatgpt-box {
+  flex: 1;
+  padding: 0 24px 0 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #343541;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  max-height: none;
+}
+
+
+.chatgpt-bubble {
+  display: flex;
+  width: 100%;
+  word-break: break-word;
+}
+
+.chatgpt-bubble.user {
+  justify-content: flex-end;
+}
+
+.chatgpt-bubble.bot {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 14px 18px !important;
+  border-radius: 16px;
+  line-height: 1.6;
+  font-size: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-x: auto;
+  background: #444654;
+  color: #e3e3e3;
+  text-align: justify;
+}
+
+.chatgpt-bubble.user .bubble {
+  background: #19c37d;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  /* text-align: right; */
+}
+
+.chatgpt-bubble.bot .bubble {
+  background: #444654;
+  color: #e3e3e3;
+  border-bottom-left-radius: 4px;
+  text-align: left;
+}
+
+.bubble pre {
+  margin: 0;
+  font-family: inherit;
+  background: none;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  text-align: justify;
+}
+
+.chatgpt-input-form {
+  display: flex;
+  padding: 18px 24px;
+  border-top: 1px solid #444654;
+  background: #202123;
+  gap: 10px;
+}
+
+
+.chatgpt-input-form input[type="text"] {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 16px;
+  border: none;
+  border-radius: 24px;
+  outline: none;
+  background: #343541;
+  color: #fff;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.chatgpt-input-form input[type="text"]:focus {
+  box-shadow: 0 0 0 2px #19c37d;
+}
+
+.chatgpt-input-form button {
+  background: #19c37d;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chatgpt-input-form button:hover {
+  background: #13a06b;
+}
+
+.doc-select-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+/* 👉 Chữ span giống hệt "RAG CHATBOT" */
+doc-select-group span {
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 👉 Select nhỏ gọn hơn */
+.doc-select-group select {
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #444654;
+  background: #23272f;
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+@media (max-width: 800px) {
+  .chatgpt-container {
+    max-width: 100vw;
+    margin: 0;
+    border-radius: 0;
+  }
+  .chatgpt-header, .chatgpt-input-form {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .chatgpt-box {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+.file-name {
+  color: #fff;
+  font-size: 15px;
+  margin-right: 8px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(40, 44, 52, 0.35);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  border: 5px solid #eee;
+  border-top: 5px solid #19c37d;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.bubble.markdown-body,
+.bubble.markdown-body * {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.1 !important;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif !important;
+}
+
+.bubble.markdown-body li {
+  margin-bottom: 0.1em !important;
+}
+
+.bubble.markdown-body p {
+  margin-bottom: 0.2em !important;
+}
+
+.bubble.markdown-body ul,
+.bubble.markdown-body ol {
+  padding-left: 1.2em !important;
+}
+
+.bubble.markdown-body {
+  padding: 14px 18px !important;
+}
+
+.chatgpt-greeting {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 22px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+  background: none;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.model-select {
+  min-width: 140px;
+  max-width: 180px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #444654;
+  background: #23272f;
+  color: #e3e3e3;
+  font-size: 15px;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  font-weight: 500;
+  margin-right: 10px;
+  outline: none;
+  appearance: none;           /* Ẩn mũi tên mặc định */
+  -webkit-appearance: none;   /* Safari/Chrome */
+  -moz-appearance: none;      /* Firefox */
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg width='16' height='16' fill='white' xmlns='http://www.w3.org/2000/svg'><path d='M4 6l4 4 4-4'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px 18px;
+  padding-right: 36px;   
+  width: auto;
+  min-width: fit-content; 
+  max-width: 100%; 
+}
+
+/* Ẩn mũi tên trên Firefox (nếu vẫn còn) */
+.model-select::-ms-expand {
+  display: none;
+}
+
+.model-label {
+  color: #fff;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+  margin-right: 8px;
+  align-self: center;
+  letter-spacing: 0.5px;
+}
+
+/* Container cho 2 bubble so sánh */
+.compare-bubbles {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+}
+
+.compare-bubble {
+  flex: 1 1 0;
+  max-width: 48%;
+  min-width: 260px;
+  border-radius: 16px;
+  padding: 14px 18px !important;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 16px;
+  line-height: 1.1 !important; 
+  word-break: break-word;
+  white-space: pre-wrap;
+  text-align: left;
+  overflow-x: auto;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif !important; 
+}
+
+
+.compare-bubble.model1 {
+  background: #444654;; 
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  align-self: flex-start; 
+}
+
+
+.compare-bubble.model2 {
+  background: #444654; 
+  color: #e3e3e3;
+  border-bottom-left-radius: 4px;
+  align-self: flex-start; 
+}
+
+.compare-bubble.markdown-body,
+.compare-bubble.markdown-body * {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.1 !important;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif !important;
+}
+.compare-bubble.markdown-body li {
+  margin-bottom: 0.1em !important;
+}
+.compare-bubble.markdown-body p {
+  margin-bottom: 0.2em !important;
+}
+.compare-bubble.markdown-body ul,
+.compare-bubble.markdown-body ol {
+  padding-left: 1.2em !important;
+}
+
+.compare-bubble.markdown-body {
+  padding: 14px 18px !important;
+}
+
+
+/* Responsive: xếp dọc khi màn nhỏ */
+@media (max-width: 900px) {
+  .compare-bubbles {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .compare-bubble {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px; /* Thêm chiều cao để dễ thấy hơn, tùy chỉnh nếu cần */
+  margin: 10px 0; /* Khoảng cách */
+}
+
+.loading-dots span {
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  background-color: #f0f0f0; /* Color of the dots */
+  border-radius: 50%;
+  opacity: 0;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+/* Thêm keyframes cho animation bounce */
+@keyframes bounce {
+  0%, 80%, 100% {
+    opacity: 0.5; /* Bắt đầu với opacity thấp */
+    transform: translateY(0); /* Vị trí gốc */
+  }
+  40% {
+    opacity: 1; /* Peak opacity */
+    transform: translateY(-10px); /* Nhảy lên */
+  }
+}
+
+.markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed; /* Giữ chia cột cố định */
+    font-size: 18px; /* Chữ to rõ ràng */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Thêm font chữ */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Tăng độ đổ bóng nhẹ */
+    border-radius: 8px; /* Bo góc nhẹ cho bảng */
+    overflow: hidden; /* Đảm bảo bo góc hoạt động */
+    background-color: #FFFFFF; /* Đảm bảo nền bảng là màu trắng đục hoàn toàn */
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid #b0c4de; /* Màu đường viền mềm mại hơn */
+    padding: 8px 12px;
+    vertical-align: top;
+    word-wrap: break-word; /* Nội dung dài tự xuống dòng */
+}
+
+/* Chỉnh độ rộng từng cột - tổng gần 100% */
+.markdown-body th:nth-child(1),
+.markdown-body td:nth-child(1) {
+    width: 5%;
+    text-align: center;
+    min-width: 40px;
+}
+
+.markdown-body th:nth-child(2),
+.markdown-body td:nth-child(2) {
+    width: 35%;
+    text-align: left;
+    min-width: 200px;
+}
+
+.markdown-body th:nth-child(3),
+.markdown-body td:nth-child(3) {
+    width: 15%;
+    text-align: center;
+    min-width: 80px;
+}
+
+.markdown-body th:nth-child(4),
+.markdown-body td:nth-child(4) {
+    width: 15%;
+    text-align: center;
+    min-width: 80px;
+}
+
+.markdown-body th:nth-child(5),
+.markdown-body td:nth-child(5) {
+    width: 15%;
+    text-align: center;
+    min-width: 80px;
+}
+
+.markdown-body th:nth-child(6),
+.markdown-body td:nth-child(6) {
+    width: 15%;
+    text-align: center;
+    min-width: 80px;
+}
+
+/* Tiêu đề bảng nổi bật */
+.markdown-body th {
+    background-color: #364F6B; /* Màu xanh đậm cho tiêu đề */
+    color: #FFFFFF; /* Màu chữ trắng cho tiêu đề */
+    font-weight: bold;
+}
+
+/* Căn chỉnh nội dung tiêu đề bảng */
+.markdown-body thead tr th {
+    text-align: center;
+}
+
+/* Màu nền đục hoàn toàn cho các hàng trong thân bảng */
+.markdown-body tr:nth-child(even) td {
+    background-color: #F8F8F8; /* Màu nền xám nhạt đục hoàn toàn cho hàng chẵn */
+    color: #333333; /* **Màu chữ đậm hơn để dễ đọc trên nền sáng** */
+}
+
+.markdown-body tr:nth-child(odd) td {
+    background-color: #FFFFFF; /* **Màu nền trắng đục hoàn toàn cho hàng lẻ** */
+    color: #333333; /* **Màu chữ đậm hơn để dễ đọc trên nền sáng** */
+}
+
+
+/* Hiệu ứng hover cho hàng */
+.markdown-body tr:hover td {
+    background-color: #E6EEF3; /* Màu xanh nhạt hơn khi di chuột qua */
+    transition: background-color 0.3s ease; /* Thêm hiệu ứng chuyển động mượt mà */
+}
+
+.markdown-body .pictureResponse {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+
+/* CSS phần thông báo */
+.popup-overlay {
+    display: none; /* Ẩn mặc định */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-box {
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.popup-box h2 {
+    margin-top: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.popup-box p {
+    font-size: 15px;
+    color: #555;
+}
+
+.popup-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.popup-actions button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.popup-actions button:hover {
+    opacity: 0.9;
+}
+
+#confirmYes {
+    background: #4CAF50;
+    color: white;
+}
+
+#confirmNo, .cancel {
+    background: #ccc;
+    color: black;
+}
+
+#alertOk {
+    background: #2196F3;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+/* CSS phần thông báo */
