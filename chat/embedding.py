@@ -14,12 +14,13 @@ collection_name = "knowledge_base"
 
 QDRANT_URL = "https://f3f9386a-ebda-4e35-ad7e-65dcd0a0a946.us-east4-0.gcp.cloud.qdrant.io"
 QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.8aC68kp-Djwk4V5Jj1WgyctXBQvxWn1YTPr9OstxCm0"
+valkey_url = 'rediss://default:AVNS_rmKGsDZar026KHs_sI5@valkey-dostore-phamhoanghuy-96f0.f.aivencloud.com:15294'
 
 # Qdrant client
 qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
-# Redis client
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+#Valkey client
+valkey_client = redis.from_url(valkey_url, decode_responses=True)
 
 
 def check_collection ():
@@ -41,7 +42,7 @@ def create_retriever_multivector (source, id_key = "doc_id", k = 3):
         embedding=embedding_model
     )
     
-    doc_store = RedisStore(client=redis_client)
+    doc_store = RedisStore(client=valkey_client)
     
     filter_conditions = Filter(
         must = [
@@ -69,14 +70,14 @@ def create_retriever_multivector (source, id_key = "doc_id", k = 3):
     return retriever
     
 
-def embedding_multivector (contexts , summaries, source):
+def embedding_multivector (contexts , summaries, name_software, version_software):
     id_key = "doc_id"
-    retriever = create_retriever_multivector(source, id_key , 3)
+    retriever = create_retriever_multivector(name_software, id_key , 3)
     doc_ids = [str(uuid.uuid4()) for _ in contexts]
     sum_docs = [
-        Document( page_content=summary, metadata={id_key: doc_ids[i], "source":source} )
+        Document( page_content=summary, metadata={id_key: doc_ids[i], "source":name_software, "version":version_software} )
         for i, summary in enumerate (summaries)
     ]
     
     retriever.vectorstore.add_documents(sum_docs)
-    retriever.docstore.mset(list(zip(doc_ids,contexts)))
+    retriever.docstore.mset(list(zip(doc_ids,contexts)))    
