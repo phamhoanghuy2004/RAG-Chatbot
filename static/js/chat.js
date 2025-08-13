@@ -238,3 +238,21 @@ function showAlert(title, message) {
         alertBox.style.display = "none";
     };
 }
+
+(function () {
+  function showDocReminderIfNeeded() {
+    const select = document.getElementById('doc-select');
+    if (!select) return;
+
+    const hasSelection = select.value && select.value.trim() !== "";
+    if (!hasSelection) {
+      showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
+  } else {
+    setTimeout(showDocReminderIfNeeded, 0);
+  }
+})();
