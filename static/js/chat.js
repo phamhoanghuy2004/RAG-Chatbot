@@ -40,7 +40,7 @@ uploadForm.onsubmit = async function (e) {
         if (res.ok) {
             showAlert("✅ Thành công", "Tải PDF thành công!");
             fileNameSpan.textContent = '';
-            uploadInput.value = '';
+            realFileInput.value = '';
             location.reload(); // ✅ Reload trang
         } else {
             const error = await res.json();
@@ -238,3 +238,34 @@ function showAlert(title, message) {
         alertBox.style.display = "none";
     };
 }
+
+// Restore selection on load
+if (sessionStorage.getItem('selectedDoc')) {
+  docSelect.value = sessionStorage.getItem('selectedDoc');
+}
+
+// Save changes once user pick a document
+docSelect.addEventListener('change', () => {
+  sessionStorage.setItem('selectedDoc', docSelect.value);
+  sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
+});
+
+// Pop up message if no doc selected yet - appear only once in every tab
+(function () {
+  function showDocReminderIfNeeded() {
+    if (sessionStorage.getItem("docSelected") === "1") return;
+    const select = document.getElementById("doc-select");
+    if (!select) return;
+
+    const hasSelection = select.value && select.value.trim() !== "";
+    if (!hasSelection) {
+      showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
+  } else {
+    setTimeout(showDocReminderIfNeeded, 0);
+  }
+})();
