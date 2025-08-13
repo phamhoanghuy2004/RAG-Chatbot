@@ -28,7 +28,7 @@ def remove_old_software_pdf(docs_dir, full_name, name_software, version_software
   
 def update_docstore (list_uuids):
     if list_uuids:
-        deleted_count = valkey_client.delete(list_uuids) 
+        deleted_count = valkey_client.delete(*list_uuids) 
         print(f"Đã xóa {deleted_count} key trong docstore")
         
 def save_pdf_to_storage(pdf, docs_dir):

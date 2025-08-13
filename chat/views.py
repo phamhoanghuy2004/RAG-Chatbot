@@ -17,6 +17,11 @@ def compare_models_result (request):
         data = json.loads(request.body)
         question = data.get('question',"")
         source = data.get('source',"")
+        parts = source.split("_")
+        if len(parts) > 2:
+            name_software = parts[1]
+        else:
+            name_software = None
         model1 = data.get('model1',"")
         model2 = data.get('model2',"")
         
@@ -24,7 +29,7 @@ def compare_models_result (request):
         
         def run_model(model_name):
             try:
-                result = rag_engine.query_with_rag_use_qdrant(question,source,model_name)
+                result = rag_engine.query_with_rag_use_qdrant(question,name_software,model_name)
             except Exception as e:
                 result = f"Lỗi gọi model {model_name}: {str(e)}"    
             result_queue.put(result)
@@ -86,6 +91,11 @@ def chat(request):
         question = data.get('question', "")
         source = data.get('source',"")
         model = data.get('model', "")
-        answer = rag_engine.query_with_rag_use_qdrant(question,source,model)
+        parts = source.split("_")
+        if len(parts) > 2:
+            name_software = parts[1]
+        else:
+            name_software = None
+        answer = rag_engine.query_with_rag_use_qdrant(question,name_software,model)
         return JsonResponse({"answer": answer})
     return JsonResponse({"error": "Invalid request method"}, status=405)
