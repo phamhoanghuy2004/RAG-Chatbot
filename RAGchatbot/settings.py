@@ -80,8 +80,14 @@ WSGI_APPLICATION = 'RAGchatbot.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',  # Đặt tên database của bạn ở đây
+        'USER': 'avnadmin',       # Đặt user postgres của bạn ở đây
+        'PASSWORD': 'AVNS_S9lnapsijm-PMfm40-H',   # Đặt password postgres của bạn ở đây
+        'HOST': 'rag-log-tracking-rag-log-tracking.c.aivencloud.com',      # Hoặc địa chỉ host của bạn
+        'PORT': '18856',           # Cổng mặc định của PostgreSQL
     }
 }
 

@@ -11,6 +11,9 @@ from django.http import StreamingHttpResponse
 from threading import Thread
 import queue
 
+from .models import LogEntry
+import time
+
 @csrf_exempt
 def compare_models_result (request):
     if (request.method == 'POST'):
@@ -96,6 +99,18 @@ def chat(request):
             name_software = parts[1]
         else:
             name_software = None
+            
+        start_time = time.time()
         answer = rag_engine.query_with_rag_use_qdrant(question,name_software,model)
+        latency = round(time.time() - start_time, 2)
+        
+        # Log the user query and RAG answer
+        LogEntry.objects.create(
+            user_question=question,
+            rag_answer=answer,
+            accuracy="N/A",  # VD: "100%" hoặc "0%"
+            latency=latency,    # VD: 2.1
+            user_satisfaction=4  # VD: 5
+        )
         return JsonResponse({"answer": answer})
     return JsonResponse({"error": "Invalid request method"}, status=405)
