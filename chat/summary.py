@@ -2,14 +2,10 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import os
+from django.conf import settings
 
 
 def create_summarize_chain (model_name = "llama-3.1-8b-instant", temperature=0.5):
-    
-    os.environ["OPENAI_API_KEY"] = "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"
-    os.environ["GROQ_API_KEY"] = "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"
-    os.environ["OPENAI_API_BASE"] = "https://api.groq.com/openai/v1"
-    
     
     prompt_text = """
         Bạn là một trợ lý ngôn ngữ chuyên rút trích thông tin cho hệ thống RAG. 
@@ -20,6 +16,6 @@ def create_summarize_chain (model_name = "llama-3.1-8b-instant", temperature=0.5
     """
 
     prompt = ChatPromptTemplate.from_template(prompt_text)
-    model = ChatGroq(temperature=temperature, model=model_name) 
+    model = ChatGroq(temperature=temperature, model=model_name, api_key=settings.GROQ_API_KEY) 
     summarize_chain = {"element": lambda x : x} | prompt | model | StrOutputParser()
     return summarize_chain

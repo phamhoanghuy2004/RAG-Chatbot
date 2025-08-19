@@ -7,20 +7,17 @@ from langchain_community.storage import RedisStore
 from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.schema.document import Document
+from django.conf import settings
 
 # Tạo embedding model tối ưu cho tiếng Việt
-embedding_model = HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-base")
-collection_name = "knowledge_base"
-
-QDRANT_URL = "https://f3f9386a-ebda-4e35-ad7e-65dcd0a0a946.us-east4-0.gcp.cloud.qdrant.io"
-QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.8aC68kp-Djwk4V5Jj1WgyctXBQvxWn1YTPr9OstxCm0"
-valkey_url = 'rediss://default:AVNS_rmKGsDZar026KHs_sI5@valkey-dostore-phamhoanghuy-96f0.f.aivencloud.com:15294'
+embedding_model = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL)
+collection_name = settings.COLLECTION_NAME
 
 # Qdrant client
-qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+qdrant_client = QdrantClient(url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY)
 
 #Valkey client
-valkey_client = redis.from_url(valkey_url, decode_responses=True)
+valkey_client = redis.from_url(settings.VALKEY_URL, decode_responses=True)
 
 
 def check_collection ():
