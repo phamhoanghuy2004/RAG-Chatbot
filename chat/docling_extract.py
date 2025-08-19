@@ -54,7 +54,7 @@ def extract_context_by_headings(markdown_text, list_header):
     
     return contexts
 
-def chunk_by_title (pdf_text_as_markdown : str, source: str, list_header):
+def chunk_by_title (pdf_text_as_markdown : str, list_header):
     filtered_headers = filter_header (list_header)
     contexts = extract_context_by_headings (pdf_text_as_markdown, filtered_headers) # mang cac context theo title
     summarize_chain = summary.create_summarize_chain ()
@@ -87,7 +87,7 @@ def extract_text_by_docling (pdf_path: str):
     return result
 
 
-def extract_images (docling_documents, images_dir, source_name, url_prefix="/extracted_images/"):
+def extract_images (docling_documents, images_dir,  name_software, version_software, url_prefix="/extracted_images/"):
     # Tạo đường dẫn thư mục lưu lại hình ảnh
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)
@@ -100,7 +100,7 @@ def extract_images (docling_documents, images_dir, source_name, url_prefix="/ext
         # giải mã base64 thành dữ liệu nhị phân
         image_data = base64.b64decode(base64_str)
         
-        fileName = f"image_{source_name}_{i}.png"
+        fileName = f"image_{name_software}_{version_software}_{i}.png"
         filePath = os.path.join(images_dir,fileName)
         
         #Lưu file hình ảnh

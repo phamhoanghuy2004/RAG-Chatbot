@@ -17,6 +17,11 @@ def compare_models_result (request):
         data = json.loads(request.body)
         question = data.get('question',"")
         source = data.get('source',"")
+        parts = source.split("_")
+        if len(parts) > 2:
+            name_software = parts[1]
+        else:
+            name_software = None
         model1 = data.get('model1',"")
         model2 = data.get('model2',"")
         
@@ -24,7 +29,7 @@ def compare_models_result (request):
         
         def run_model(model_name):
             try:
-                result = rag_engine.query_with_rag_use_qdrant(question,source,model_name)
+                result = rag_engine.query_with_rag_use_qdrant(question,name_software,model_name)
             except Exception as e:
                 result = f"Lỗi gọi model {model_name}: {str(e)}"    
             result_queue.put(result)
@@ -58,20 +63,21 @@ def upload_pdf (request):
         if not util.is_valid_pdf_name (pdf.name):
             return JsonResponse({"error": "Invalid file name"}, status=400)
         
-        name_software = util.extract_software_name(pdf.name)
-        if not name_software:
+        name_software, version_software = util.extract_software_name(pdf.name)
+        if not name_software or not version_software:
             return JsonResponse({"error": "Invalid file name"}, status=400)
         
-        # update point và delete existing file
+        # update point, docs và delete existing file
         docs_dir = os.path.join(settings.BASE_DIR,'docs')
         images_dir = os.path.join(settings.BASE_DIR, 'extracted_images')
-        util.remove_old_software_pdf(docs_dir, name_software)
+        util.remove_old_software_pdf(docs_dir, pdf.name, name_software, version_software)
+
         
         #Lưu lại pdf trong thư mục blog/docs
         saved_absolute_path = util.save_pdf_to_storage(pdf, docs_dir)
         
         # Gọi xử lý
-        ingest_pdf.ingest_pdf_docling(saved_absolute_path, images_dir)
+        ingest_pdf.ingest_pdf_docling(saved_absolute_path, name_software, version_software, images_dir)
         
         return JsonResponse({'message': 'Tải lên thành công!'})
         
@@ -85,6 +91,11 @@ def chat(request):
         question = data.get('question', "")
         source = data.get('source',"")
         model = data.get('model', "")
-        answer = rag_engine.query_with_rag_use_qdrant(question,source,model)
+        parts = source.split("_")
+        if len(parts) > 2:
+            name_software = parts[1]
+        else:
+            name_software = None
+        answer = rag_engine.query_with_rag_use_qdrant(question,name_software,model)
         return JsonResponse({"answer": answer})
     return JsonResponse({"error": "Invalid request method"}, status=405)
