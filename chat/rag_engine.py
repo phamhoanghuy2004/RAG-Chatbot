@@ -4,12 +4,6 @@ from . import model_response
 from . import embedding
 
 
-
-# Cấu hình Groq API
-os.environ["OPENAI_API_KEY"] = "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"
-os.environ["OPENAI_API_BASE"] = "https://api.groq.com/openai/v1"
-
-
 # Danh sách các model
 model_dispatch = {
     "gemma2-9b-it": model_response.response_of_gemma2,

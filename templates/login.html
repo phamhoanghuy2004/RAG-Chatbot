@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập</title>
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo">RAG</div>
+      <div>
+        <h2>Đăng nhập</h2>
+        <p>Chào mừng trở lại 👋</p>
+      </div>
+    </div>
+
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="username">Tài khoản</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="input-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+
+      <div class="options">
+        <label><input type="checkbox" name="remember"> Ghi nhớ tôi</label>
+        <a href="#">Quên mật khẩu?</a>
+      </div>
+
+      <button type="submit" class="btn">Đăng nhập</button>
+
+      <div class="error-message" id="errorMsg" style="display:none;">Đăng nhập thất bại</div>
+    </form>
+  </div>
+
+  <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>
