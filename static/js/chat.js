@@ -187,6 +187,11 @@ chatForm.onsubmit = async function (e) {
 
             typeWriterEffect(bubbleContent, htmlAnswer, 1);
 
+            // Append feedback form
+            // Thêm form đánh giá ngay dưới câu trả lời
+            const feedbackForm = appendFeedbackForm(data.log_id);
+            chatBox.appendChild(feedbackForm);
+
         } catch (err) {
             const errorBubble = document.createElement('div');
             errorBubble.className = 'chatgpt-bubble bot';
@@ -269,3 +274,79 @@ docSelect.addEventListener('change', () => {
     setTimeout(showDocReminderIfNeeded, 0);
   }
 })();
+
+function appendFeedbackForm(logId) {
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'feedback-form';
+    feedbackDiv.dataset.logId = logId;
+
+    // Accuracy label
+    const accuracyLabel = document.createElement('label');
+    accuracyLabel.textContent = 'Độ chính xác (%):';
+    feedbackDiv.appendChild(accuracyLabel);
+
+    // Accuracy input
+    const accuracyInput = document.createElement('input');
+    accuracyInput.type = 'number';
+    accuracyInput.className = 'accuracy-input';
+    accuracyInput.min = 0;
+    accuracyInput.max = 100;
+    accuracyInput.step = 1;
+    accuracyInput.style.width = '60px';
+    feedbackDiv.appendChild(accuracyInput);
+
+    // Satisfaction label
+    const satisfactionLabel = document.createElement('span');
+    satisfactionLabel.style.marginLeft = '20px';
+    satisfactionLabel.textContent = 'Mức độ hài lòng:';
+    feedbackDiv.appendChild(satisfactionLabel);
+
+    // Stars
+    const starsSpan = document.createElement('span');
+    starsSpan.className = 'stars';
+    let selectedStar = 0;
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.dataset.value = i;
+        star.innerHTML = '&#9733;'; // Unicode star character
+        star.onclick = function () {
+            selectedStar = parseInt(this.dataset.value);
+            starsSpan.querySelectorAll('.star').forEach((s, idx) => {
+                if (idx < selectedStar) s.classList.add('selected');
+                else s.classList.remove('selected');
+            });
+        };
+        starsSpan.appendChild(star);
+    }
+    feedbackDiv.appendChild(starsSpan);
+
+    // Submit button
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'submit-feedback-btn';
+    submitBtn.textContent = 'Gửi đánh giá';
+    submitBtn.onclick = async function () {
+        const accuracy = accuracyInput.value;
+        if (!accuracy) {
+            alert("Vui lòng nhập độ chính xác!");
+            return;
+        }
+        if (!selectedStar) {
+            alert("Vui lòng chọn mức độ hài lòng!");
+            return;
+        }
+        await fetch('/api/feedback/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                log_id: logId,
+                accuracy: accuracy,
+                user_satisfaction: selectedStar
+            })
+        });
+        submitBtn.textContent = "Đánh giá lại";
+    };
+    feedbackDiv.appendChild(submitBtn);
+
+    return feedbackDiv;
+}

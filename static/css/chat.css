@@ -196,6 +196,42 @@ html, body {
   background: #13a06b;
 }
 
+/* Feedback form style */
+.feedback-form {
+    color: inherit;
+    /* background: #222; */
+    padding-left: 16px;
+    /* border-radius: 8px; */
+    /* margin-top: 8px; */
+    /* font-size: 15px; */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Star rating style */
+.feedback-form .star {
+    font-size: 22px;
+    color: #888; /* grey by default */
+    /* cursor: pointer; */
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.feedback-form .star.selected {
+    color: #FFD600; /* yellow when selected */
+}
+
+.feedback-form label,
+.feedback-form span {
+    color: #fff;
+
+}
+
+.feedback-form input {
+    width: 60px;
+}
+
 .doc-select-group {
   display: flex;
   align-items: center;
