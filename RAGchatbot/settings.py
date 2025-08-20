@@ -117,13 +117,13 @@ WSGI_APPLICATION = 'RAGchatbot.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'db_Annie': {   # PostgreSQL
+    'default': {   # PostgreSQL
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'defaultdb',
-        'USER': 'avnadmin',
-        'PASSWORD': 'AVNS_S9lnapsijm-PMfm40-H',
-        'HOST': 'rag-log-tracking-rag-log-tracking.c.aivencloud.com',
-        'PORT': '18856',
+        'NAME': env("DB_NAME_ANNIE"),
+        'USER': env("DB_USER_ANNIE"),
+        'PASSWORD': env("DB_PASSWORD_ANNIE"),
+        'HOST': env("DB_HOST_ANNIE"),
+        'PORT': env.int("DB_PORT_ANNIE"),
     },
     'db_Huy': {   # MySQL
         'ENGINE': 'django.db.backends.mysql',
