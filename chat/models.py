@@ -1,6 +1,7 @@
 from django.db import models
 
 class LogEntry(models.Model):
+    id = models.AutoField(primary_key=True)
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Ngày / Phiên test")
     user_question = models.TextField(verbose_name="Câu hỏi của người dùng")
     rag_answer = models.TextField(verbose_name="Câu trả lời RAG")

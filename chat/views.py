@@ -159,15 +159,32 @@ def chat(request):
     latency = round(time.time() - start_time, 2)
         
     # Log the user query and RAG answer
-    LogEntry.objects.create(
+    log = LogEntry.objects.create(
         user_question=question,
         rag_answer=answer,
-        accuracy="N/A",  # VD: "100%" hoặc "0%"
+        accuracy="N/A",  # VD: "100" hoặc "0"
         latency=latency,    # VD: 2.1
-        user_satisfaction=4  # VD: 5
+        user_satisfaction=0 # VD: 5
     )
-    return JsonResponse({"answer": answer})
+    # Sau khi nhận response từ /api/chat/
+    print("API /api/chat/ response:", data)
+    print("LogEntry created with id:", log.id)
+    return JsonResponse({"answer": answer, "log_id": log.id})
 
+@csrf_exempt
+def feedback(request):
+    data = json.loads(request.body)
+    log_id = data.get('log_id')
+    accuracy = data.get('accuracy')
+    user_satisfaction = data.get('user_satisfaction')
+    try:
+        log = LogEntry.objects.get(id=log_id)
+        log.accuracy = f"{accuracy}"
+        log.user_satisfaction = user_satisfaction
+        log.save()
+        return JsonResponse({'status': 'ok'})
+    except LogEntry.DoesNotExist:
+        return JsonResponse({'error': 'Log not found'}, status=404)
 
 @csrf_exempt
 def login (request):
