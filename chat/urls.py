@@ -7,4 +7,6 @@ urlpatterns = [
     path('api/chat/', views.chat, name='chat_view'),
     path('api/chat/compare/',views.compare_models_result, name="compare_models_result"),
     path('api/feedback/', views.feedback, name='feedback'),
+    path('api/login/', views.login, name="login"),
+    path('api/loginPage/', views.login_page, name="loginPage")
 ]

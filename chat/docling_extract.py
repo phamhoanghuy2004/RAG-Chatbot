@@ -9,6 +9,7 @@ from . import summary
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 import os
 import base64
+import torch
 
 
 def get_list_header (docling_documents):
@@ -68,8 +69,9 @@ def extract_text_by_docling (pdf_path: str):
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = True
     pipeline_options.table_structure_options.do_cell_matching = True
+    device = AcceleratorDevice.CUDA if torch.cuda.is_available() else AcceleratorDevice.CPU
     pipeline_options.accelerator_options = AcceleratorOptions (
-        device=AcceleratorDevice.CUDA
+        device=device
     )
     pipeline_options.generate_picture_images = True  # Bật trích xuất hình ảnh
     pipeline_options.images_scale = 2  # Phóng to hình ảnh gấp đôi

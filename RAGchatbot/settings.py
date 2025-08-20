@@ -12,9 +12,47 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+import datetime
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Khởi tạo
+env = environ.Env()
+# Chỉ định rõ đường dẫn file .env
+env.read_env(os.path.join(BASE_DIR, ".env"))
+
+
+# JWT
+ACCESS_TOKEN_LIFETIME = datetime.timedelta(minutes=env.int("ACCESS_TOKEN_LIFETIME", default=15))
+SECURE_COOKIE = env.bool("SECURE_COOKIE", default=False)
+SECRET_KEY_JWT = env("SECRET_KEY_JWT")
+
+# File size 
+MAX_MB = env.int("MAX_MB", default=20)
+
+# Embedding model
+EMBEDDING_MODEL = env("EMBEDDING_MODEL")
+
+# Qdrant
+QDRANT_URL = env("QDRANT_URL")
+QDRANT_API_KEY = env("QDRANT_API_KEY")
+COLLECTION_NAME = env("COLLECTION_NAME")
+
+# Redis / Valkey
+VALKEY_URL = env("VALKEY_URL")
+
+# Groq API
+OPENAI_API_KEY = env("OPENAI_API_KEY")
+OPENAI_API_BASE = env("OPENAI_API_BASE")
+GROQ_API_KEY = env("GROQ_API_KEY")
+
+# Database
+DB_SSL_CA = os.path.join(BASE_DIR, "certs", "ca.pem")
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -79,18 +117,26 @@ WSGI_APPLICATION = 'RAGchatbot.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
+    'default': {   # PostgreSQL
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'defaultdb',  # Đặt tên database của bạn ở đây
-        'USER': 'avnadmin',       # Đặt user postgres của bạn ở đây
-        'PASSWORD': 'AVNS_S9lnapsijm-PMfm40-H',   # Đặt password postgres của bạn ở đây
-        'HOST': 'rag-log-tracking-rag-log-tracking.c.aivencloud.com',      # Hoặc địa chỉ host của bạn
-        'PORT': '18856',           # Cổng mặc định của PostgreSQL
+        'NAME': env("DB_NAME_ANNIE"),
+        'USER': env("DB_USER_ANNIE"),
+        'PASSWORD': env("DB_PASSWORD_ANNIE"),
+        'HOST': env("DB_HOST_ANNIE"),
+        'PORT': env.int("DB_PORT_ANNIE"),
+    },
+    'db_Huy': {   # MySQL
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': env("DB_HOST"),
+        'PORT': env.int("DB_PORT"),
+        'USER': env("DB_USER"),
+        'PASSWORD': env("DB_PASSWORD"),
+        'NAME': env("DB_NAME"),
+        'OPTIONS': {
+            "ssl": {"ca": DB_SSL_CA}
+        }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

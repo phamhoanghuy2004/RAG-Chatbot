@@ -44,7 +44,17 @@ uploadForm.onsubmit = async function (e) {
             location.reload(); // ✅ Reload trang
         } else {
             const error = await res.json();
-            showAlert("❌ Thất bại", `Tải PDF thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
+            if (res.status === 401){
+                showConfirm(
+                    "⚠ Vui lòng đăng nhập để thực hiện hành động!",
+                    function () {
+                        window.location.href = "/api/loginPage/";
+                    }
+                );
+            }
+            else{
+                showAlert("❌ Thất bại", `Tải PDF thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
+            }
         }
     } catch (err) {
         showAlert("❌ Lỗi kết nối", "Không thể kết nối máy chủ.");

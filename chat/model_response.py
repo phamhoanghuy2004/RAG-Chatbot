@@ -1,6 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from langchain.prompts import PromptTemplate
+from django.conf import settings
 
 
 
@@ -32,7 +33,9 @@ def _generic_response(question, excerpts, model_name, assistant_name):
     try:
         llm = ChatOpenAI (
             model = model_name,
-            temperature=0.3
+            temperature=0.3,
+            api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_API_BASE
         )
         message = [HumanMessage(content=prompt)]
         response = llm.invoke(message)
