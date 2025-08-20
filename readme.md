@@ -11,13 +11,8 @@
 
 These are improvements considered for future versions of the RAG Chatbot:
 
-1. **Fix Upload Error Message**
-    - Uploaded successfully but still shows an error message.
-21. **Conversation Memory**
-    - Enable the chatbot to remember previous user messages and maintain context across multiple turns.
-    - Potential implementation: store chat history in Redis or a database and inject it into prompts.
-
-3. **Improve Upload Time**
-    - Optimize the document upload process to handle files faster.
-    - Possible approaches:
-
+1. Conversation memory
+2. Logout
+3. Selecting document type before upload
+4. Enforce picking document before chat
+5. Detailed logging

@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Khởi tạo
 env = environ.Env()
 # Chỉ định rõ đường dẫn file .env
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+env.read_env(os.path.join(BASE_DIR, ".env"))
 
 
 # JWT
