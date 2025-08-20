@@ -41,12 +41,12 @@ class MySQLConnector:
             
 def get_db_connection():
     return MySQLConnector(
-        host=settings.DATABASES['default']['HOST'],
-        user=settings.DATABASES['default']['USER'],
-        port=settings.DATABASES['default']['PORT'],
-        password=settings.DATABASES['default']['PASSWORD'],
-        database=settings.DATABASES['default']['NAME'],
-        ssl_ca=settings.DATABASES['default']['OPTIONS']['ssl']['ca']
+        host=settings.DATABASES['db_Huy']['HOST'],
+        user=settings.DATABASES['db_Huy']['USER'],
+        port=settings.DATABASES['db_Huy']['PORT'],
+        password=settings.DATABASES['db_Huy']['PASSWORD'],
+        database=settings.DATABASES['db_Huy']['NAME'],
+        ssl_ca=settings.DATABASES['db_Huy']['OPTIONS']['ssl']['ca']
     )
     
 def get_user (query, param):
