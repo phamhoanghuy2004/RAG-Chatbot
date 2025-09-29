@@ -89,6 +89,18 @@
         <option value="compare:gemma2-9b-itVSllama-3.3-70b-versatile">gemma2 VS llama-3.3</option>
         <option value="compare:llama-3.1-8b-instantVSllama-3.3-70b-versatile">llama-3.1 VS llama-3.3</option>
       </select>
+      
+      <div class="hybrid-controls">
+        <label class="hybrid-toggle">
+          <input type="checkbox" id="hybrid-checkbox"> Hybrid
+        </label>
+        <div class="weight-controls" id="weight-controls" style="display: none;">
+          <span class="weight-label">Dense:</span>
+          <input type="range" id="dense-weight" min="0" max="1" step="0.1" value="0.7">
+          <span id="dense-value">0.7</span>
+        </div>
+      </div>
+      
       <input type="text" id="user-input" placeholder="Nhập câu hỏi..." autocomplete="off">
       <button type="submit" title="Gửi"><i class="fa-solid fa-paper-plane"></i></button>
     </form>

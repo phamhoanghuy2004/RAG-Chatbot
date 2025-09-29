@@ -58,7 +58,7 @@ def extract_context_by_headings(markdown_text, list_header):
 def chunk_by_title (pdf_text_as_markdown : str, list_header):
     filtered_headers = filter_header (list_header)
     contexts = extract_context_by_headings (pdf_text_as_markdown, filtered_headers) # mang cac context theo title
-    summarize_chain = summary.create_summarize_chain ()
+    summarize_chain = summary.create_summarize_chain (bypass_summary=False)
     summaries = summarize_chain.batch(contexts, {"max_concurrency" : 1}) 
     return contexts, summaries   
     

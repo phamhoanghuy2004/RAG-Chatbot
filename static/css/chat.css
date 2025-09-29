@@ -402,6 +402,85 @@ doc-select-group span {
   letter-spacing: 0.5px;
 }
 
+/* Hybrid retrieval controls */
+.hybrid-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 10px;
+}
+
+.hybrid-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hybrid-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.weight-controls {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(52, 53, 65, 0.8);
+  border-radius: 8px;
+  border: 1px solid #444654;
+}
+
+.weight-label {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.weight-controls input[type="range"] {
+  width: 80px;
+  height: 6px;
+  background: #444654;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.weight-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #19c37d;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.weight-controls input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #19c37d;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+#dense-value {
+  color: #19c37d;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
 /* Container cho 2 bubble so sánh */
 .compare-bubbles {
   display: flex;

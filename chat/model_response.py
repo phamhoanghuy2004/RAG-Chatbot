@@ -5,20 +5,72 @@ from django.conf import settings
 
 
 
+import re
+
+def ensure_images_in_response(response, context):
+    """
+    Post-process response to log missing images but don't add them automatically
+    
+    Args:
+        response: Generated response text
+        context: Original context used for generation
+        
+    Returns:
+        Original response without automatic image additions
+    """
+    # Find all images in context
+    context_images = re.findall(r'<img[^>]*>', context)
+    
+    # Find all images in response
+    response_images = re.findall(r'<img[^>]*>', response)
+    
+    # Find missing images
+    missing_images = []
+    for img in context_images:
+        if img not in response:
+            missing_images.append(img)
+    
+    # Just log missing images for debugging, don't add them
+    if missing_images:
+        print(f"[IMAGE INFO] {len(missing_images)} images from context not included in response")
+    else:
+        print(f"[IMAGE INFO] All {len(context_images)} context images included in response")
+    
+    return response
+
+
 def _generic_response(question, excerpts, model_name, assistant_name):
            
     prompt = PromptTemplate.from_template("""
-        Bạn là {assistant_name} một trợ lý kỹ thuật thông minh, chuyên hỗ trợ người dùng sử dụng phần mềm.
+        Bạn là {assistant_name} một trợ lý kỹ thuật chuyên nghiệp và thông thái, được thiết kế để hỗ trợ người dùng một cách toàn diện.
 
-        Dựa trên thông tin ngữ cảnh dưới đây, hãy trả lời câu hỏi một cách chính xác và dễ hiểu. Khi đề cập đến hình ảnh, hãy sử dụng định dạng thẻ <img> giống như trong ngữ cảnh (ví dụ: <img src='đường_dẫn' alt='mô_tả' class='pictureResponse' />) để hiển thị hình ảnh. Nếu không tìm thấy câu trả lời trong ngữ cảnh, hãy trả lời: "Tôi không có đủ thông tin để trả lời câu hỏi này."
+        NHIỆM VỤ CHÍNH:
+        - Phân tích kỹ lưỡng tất cả thông tin trong ngữ cảnh được cung cấp
+        - Cung cấp câu trả lời chi tiết, đầy đủ và chính xác
+        - Giữ nguyên độ phức tạp và chi tiết kỹ thuật từ tài liệu gốc
+        - Không bỏ qua bất kỳ thông tin quan trọng nào
+        - Sử dụng thuật ngữ chuyên ngành chính xác khi cần thiết
 
-        Ngữ cảnh:
+        HƯỚNG DẪN CHI TIẾT:
+        1. ĐỌC KỸ: Xem xét cẩn thận toàn bộ ngữ cảnh được cung cấp
+        2. PHÂN TÍCH: Tìm hiểu tất cả thông tin liên quan đến câu hỏi
+        3. TỔng HỢP: Kết hợp thông tin từ nhiều phần của ngữ cảnh
+        4. NHẬN DIỆN HÌNH ẢNH: Tìm và bao gồm tất cả hình ảnh có trong ngữ cảnh**
+        5. CHI TIẾT HOÁ: Cung cấp giải thích đầy đủ, bao gồm các bước cụ thể, tham số, và lưu ý quan trọng
+        6. TÍCH HỢP HÌNH ẢNH: Đặt hình ảnh ở đúng vị trí trong câu trả lời để minh họa nội dung**
+        7. KIỂM TRA: Đảm bảo không bỏ sót thông tin quan trọng và hình ảnh minh họa
+
+        ĐỊNH DẠNG HÌNH ẢNH: Sử dụng định dạng CHÍNH XÁC: <img src='đường_dẫn' alt='mô_tả' class='pictureResponse' />
+
+        NGỮ CẢNH ĐƯỢC CUNG CẤP:
         {context}
 
-        Câu hỏi:
+        CÂU HỎI CỦA NGƯỜI DÙNG:
         {question}
-        
-        Lưu ý: Hãy luôn giới thiệu bạn là {assistant_name} ở đầu câu trả lời.
+
+        LỆNH THỰC HIỆN:
+        Dựa trên ngữ cảnh trên, hãy trả lời câu hỏi một cách chi tiết, chuyên sâu và đầy đủ nhất có thể. Hãy giới thiệu bạn là {assistant_name} ở đầu câu trả lời, sau đó cung cấp phản hồi toàn diện, bao gồm tất cả thông tin liên quan và chi tiết kỹ thuật cần thiết.
+        Nếu thực sự không tìm thấy thông tin phù hợp trong ngữ cảnh, hãy trả lời: "Tôi không tìm thấy thông tin cụ thể về vấn đề này trong tài liệu được cung cấp."
         
     """).format(
         assistant_name = assistant_name,
@@ -33,13 +85,20 @@ def _generic_response(question, excerpts, model_name, assistant_name):
     try:
         llm = ChatOpenAI (
             model = model_name,
-            temperature=0.3,
+            temperature=0.7,  # Increased for more detailed and nuanced responses
             api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_API_BASE
+            base_url=settings.OPENAI_API_BASE,
+            max_tokens=2048,  # Ensure longer responses for comprehensive answers
+            top_p=0.9  # Allow for more diverse token selection
         )
         message = [HumanMessage(content=prompt)]
         response = llm.invoke(message)
         return response.content or "Không có phản hồi Model"
+        # raw_response = response.content or "Không có phản hồi Model"
+        
+        # # Post-process to ensure images are included
+        # enhanced_response = ensure_images_in_response(raw_response, excerpts)
+        # return enhanced_response
     except Exception as ex:
         return f"Lỗi gọi LLM: {str(ex)}"
     

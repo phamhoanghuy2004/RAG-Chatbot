@@ -12,12 +12,51 @@ model_dispatch = {
 }
 
 def get_context_with_multivector (question : str, source):
-    retriever = embedding.create_retriever_multivector (source, id_key = "doc_id", k = 3)
+    retriever = embedding.create_retriever_multivector (source, id_key = "doc_id", k = 5)  # Increased k from 3 to 5
     contexts =  retriever.invoke(question)
-    cleaned_contexts = "\n\n---\n\n".join([str(context) for context in contexts])
+    # Enhanced context formatting to preserve more information
+    cleaned_contexts = "\n\n" + "="*80 + "\n\n".join([
+        f"📄 DOCUMENT CHUNK {i+1}:\n{str(context)}" 
+        for i, context in enumerate(contexts)
+    ]) + "\n\n" + "="*80
     return cleaned_contexts
 
-def query_with_rag_use_qdrant (question: str, source: str, model: str) ->str:
+
+def get_context_with_hybrid_retriever(question: str, source, use_hybrid=True, weights=[0.7, 0.3]):
+    """
+    Retrieve context using hybrid retriever (dense + sparse) or fallback to multivector only
+    
+    Args:
+        question: User query
+        source: Document source
+        use_hybrid: Whether to use hybrid retrieval or just dense
+        weights: [dense_weight, sparse_weight] for hybrid retrieval
+    
+    Returns:
+        Cleaned context string
+    """
+    try:
+        if use_hybrid:
+            retriever = embedding.create_hybrid_retriever(source, id_key="doc_id", k=5, weights=weights)  # Increased k
+            print(f"Using hybrid retriever for source: {source}")
+        else:
+            retriever = embedding.create_retriever_multivector(source, id_key="doc_id", k=5)  # Increased k
+            print(f"Using dense-only retriever for source: {source}")
+            
+        contexts = retriever.invoke(question)
+        # Enhanced context formatting to preserve more information
+        cleaned_contexts = "\n\n" + "="*80 + "\n\n".join([
+            f"📄 DOCUMENT CHUNK {i+1}:\n{str(context)}" 
+            for i, context in enumerate(contexts)
+        ]) + "\n\n" + "="*80
+        return cleaned_contexts
+        
+    except Exception as e:
+        print(f"Error in hybrid retrieval, falling back to multivector: {str(e)}")
+        # Fallback to original multivector approach
+        return get_context_with_multivector(question, source)
+
+def query_with_rag_use_qdrant (question: str, source: str, model: str, use_hybrid: bool = False, hybrid_weights: list = [0.7, 0.3]) ->str:
     
     if source == "" or not source:
         return "Xin chào, Bạn vui lòng chọn tài liệu ở trên để mình hướng dẫn nhé!"
@@ -29,8 +68,11 @@ def query_with_rag_use_qdrant (question: str, source: str, model: str) ->str:
         return "Xin chào, Bạn vui lòng cho mình biết bạn muốn hỏi gì nhé!"
     
     try: 
-        # get context 
-        contexts = get_context_with_multivector(question, source)      
+        # get context using hybrid or multivector retriever
+        if use_hybrid:
+            contexts = get_context_with_hybrid_retriever(question, source, use_hybrid=True, weights=hybrid_weights)
+        else:
+            contexts = get_context_with_multivector(question, source)   
         
         # if not context
         if not contexts :
