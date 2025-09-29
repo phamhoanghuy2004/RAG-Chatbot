@@ -11,6 +11,32 @@ const modelSelect = document.getElementById('model-select')
 const chatGreeting = document.getElementById('chat-greeting');
 const loadingDots = document.getElementById('loading-dots');
 
+// // Hybrid retrieval elements
+// const hybridCheckbox = document.getElementById('hybrid-checkbox');
+// const weightControls = document.getElementById('weight-controls');
+// const denseWeight = document.getElementById('dense-weight');
+// const denseValue = document.getElementById('dense-value');
+
+// // Handle hybrid toggle
+// if (hybridCheckbox && weightControls) {
+//     hybridCheckbox.addEventListener('change', function() {
+//         if (this.checked) {
+//             weightControls.style.display = 'flex';
+//         } else {
+//             weightControls.style.display = 'none';
+//         }
+//     });
+// }
+
+// // Handle weight slider
+// if (denseWeight && denseValue) {
+//     denseWeight.addEventListener('input', function() {
+//         const dense = parseFloat(this.value);
+//         const sparse = (1.0 - dense).toFixed(1);
+//         denseValue.textContent = `${dense}:${sparse}`;
+//     });
+// }
+
 chooseFileBtn.addEventListener("click", function () {
     showConfirm(
         "Vui lòng đặt tên file theo định dạng:<br><strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>",
@@ -169,6 +195,23 @@ chatForm.onsubmit = async function (e) {
         }
     } else {
         try {
+            // // Get hybrid retrieval settings
+            // const useHybrid = hybridCheckbox ? hybridCheckbox.checked : false;
+            // const denseWeightValue = denseWeight ? parseFloat(denseWeight.value) : 0.7;
+            // const sparseWeightValue = 1.0 - denseWeightValue;
+            
+            // const requestData = {
+            //     question,
+            //     source: selectedSource,
+            //     model: selectedModel
+            // };
+            
+            // // Add hybrid settings if enabled
+            // if (useHybrid) {
+            //     requestData.use_hybrid = true;
+            //     requestData.hybrid_weights = [denseWeightValue, sparseWeightValue];
+            // }
+            
             const res = await fetch('/api/chat/', {
                 method: 'POST',
                 headers: {

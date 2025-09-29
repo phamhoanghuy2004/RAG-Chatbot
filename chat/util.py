@@ -17,6 +17,9 @@ def remove_old_software_pdf(docs_dir, full_name, name_software, version_software
             if f and f.lower() == full_name.lower():
                 list_uuids = update_points(name_software, version_software)
                 update_docstore (list_uuids)
+                # Clear TF-IDF cache for this source
+                from . import embedding
+                embedding.clear_tfidf_cache(name_software)
                 old_file_path = os.path.join(docs_dir, f)
                 if default_storage.exists(old_file_path):
                     default_storage.delete(old_file_path)
@@ -32,11 +35,18 @@ def update_docstore (list_uuids):
         
 def save_pdf_to_storage(pdf, docs_dir):
     try:
-        save_path = os.path.join(docs_dir, pdf.name)
-        saved_relative_path = default_storage.save(save_path, pdf)
-        return default_storage.path(saved_relative_path)  # absolute path
+        # Ensure docs_dir is relative to the storage location
+        rel_dir = os.path.relpath(docs_dir, settings.BASE_DIR)
+        rel_path = os.path.join(rel_dir, pdf.name)
+        print(f"Saving PDF to relative path: {rel_path}")
+        saved_relative_path = default_storage.save(rel_path, pdf)
+        abs_path = default_storage.path(saved_relative_path)
+        print(f"Saved to: {abs_path}")
+        return abs_path  # absolute path
     except Exception as ex:
         print(f"Error when saving file: {ex}")
+        import traceback
+        traceback.print_exc()
         raise
 
 def get_valid_pdf_files(docs_dir):
@@ -108,3 +118,6 @@ def update_points (name_software: str, version_software: str):
     
     print(f"Updated successfully ({len(all_points)} point deleted)")
     return deleted_doc_ids
+
+keys = valkey_client.keys()
+print(f"Total keys: {len(keys)}")

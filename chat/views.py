@@ -148,6 +148,11 @@ def chat(request):
     question = data.get('question', "")
     source = data.get('source',"")
     model = data.get('model', "")
+    
+    # # Optional hybrid retrieval parameters
+    # use_hybrid = data.get('use_hybrid', False)  # Default to False for backward compatibility
+    # hybrid_weights = data.get('hybrid_weights', [0.7, 0.3])  # Dense, Sparse weights
+    
     parts = source.split("_")
     if len(parts) > 2:
         name_software = parts[1]
@@ -155,7 +160,9 @@ def chat(request):
         name_software = None
             
     start_time = time.time()
-    answer = rag_engine.query_with_rag_use_qdrant(question,name_software,model)
+    answer = rag_engine.query_with_rag_use_qdrant(
+        question, name_software, model
+    )
     latency = round(time.time() - start_time, 2)
         
     # Log the user query and RAG answer
