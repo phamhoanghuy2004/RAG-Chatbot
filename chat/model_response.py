@@ -3,7 +3,7 @@ from langchain.schema import HumanMessage
 from langchain.prompts import PromptTemplate
 from django.conf import settings
 
-
+from . import database_util
 
 import re
 
@@ -40,39 +40,12 @@ def ensure_images_in_response(response, context):
 
 
 def _generic_response(question, excerpts, model_name, assistant_name):
+    
+    strPrompt = database_util.get_generate_prompt()
+    if not strPrompt:
+        return "Xin lỗi tôi chưa thể trả lời câu hỏi của bạn. Do tôi bị lỗi liên quan đến prompt"
            
-    prompt = PromptTemplate.from_template("""
-        Bạn là {assistant_name} một trợ lý kỹ thuật chuyên nghiệp và thông thái, được thiết kế để hỗ trợ người dùng một cách toàn diện.
-
-        NHIỆM VỤ CHÍNH:
-        - Phân tích kỹ lưỡng tất cả thông tin trong ngữ cảnh được cung cấp
-        - Cung cấp câu trả lời chi tiết, đầy đủ và chính xác
-        - Giữ nguyên độ phức tạp và chi tiết kỹ thuật từ tài liệu gốc
-        - Không bỏ qua bất kỳ thông tin quan trọng nào
-        - Sử dụng thuật ngữ chuyên ngành chính xác khi cần thiết
-
-        HƯỚNG DẪN CHI TIẾT:
-        1. ĐỌC KỸ: Xem xét cẩn thận toàn bộ ngữ cảnh được cung cấp
-        2. PHÂN TÍCH: Tìm hiểu tất cả thông tin liên quan đến câu hỏi
-        3. TỔng HỢP: Kết hợp thông tin từ nhiều phần của ngữ cảnh
-        4. NHẬN DIỆN HÌNH ẢNH: Tìm và bao gồm tất cả hình ảnh có trong ngữ cảnh**
-        5. CHI TIẾT HOÁ: Cung cấp giải thích đầy đủ, bao gồm các bước cụ thể, tham số, và lưu ý quan trọng
-        6. TÍCH HỢP HÌNH ẢNH: Đặt hình ảnh ở đúng vị trí trong câu trả lời để minh họa nội dung**
-        7. KIỂM TRA: Đảm bảo không bỏ sót thông tin quan trọng và hình ảnh minh họa
-
-        ĐỊNH DẠNG HÌNH ẢNH: Sử dụng định dạng CHÍNH XÁC: <img src='đường_dẫn' alt='mô_tả' class='pictureResponse' />
-
-        NGỮ CẢNH ĐƯỢC CUNG CẤP:
-        {context}
-
-        CÂU HỎI CỦA NGƯỜI DÙNG:
-        {question}
-
-        LỆNH THỰC HIỆN:
-        Dựa trên ngữ cảnh trên, hãy trả lời câu hỏi một cách chi tiết, chuyên sâu và đầy đủ nhất có thể. Hãy giới thiệu bạn là {assistant_name} ở đầu câu trả lời, sau đó cung cấp phản hồi toàn diện, bao gồm tất cả thông tin liên quan và chi tiết kỹ thuật cần thiết.
-        Nếu thực sự không tìm thấy thông tin phù hợp trong ngữ cảnh, hãy trả lời: "Tôi không tìm thấy thông tin cụ thể về vấn đề này trong tài liệu được cung cấp."
-        
-    """).format(
+    prompt = PromptTemplate.from_template(strPrompt.content).format(
         assistant_name = assistant_name,
         question = question,
         context = excerpts

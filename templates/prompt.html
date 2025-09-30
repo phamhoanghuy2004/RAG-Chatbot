@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Prompt</title>
+    <link rel="stylesheet" href="{% static 'css/prompt.css' %}">
+</head>
+
+<body>
+    <!-- Popup xác nhận -->
+    <div id="customConfirm" class="popup-overlay">
+        <div class="popup-box">
+            <h2>📄 Quy định</h2>
+            <p>Vui lòng đặt tên file theo định dạng:<br>
+                <strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>
+            </p>
+            <div class="popup-actions">
+                <button id="confirmYes">Tiếp tục</button>
+                <button id="confirmNo" class="cancel">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup thông báo -->
+    <div id="customAlert" class="popup-overlay">
+        <div class="popup-box">
+            <h2 id="alertTitle"></h2>
+            <p id="alertMessage"></p>
+            <div class="popup-actions">
+                <button id="alertOk">OK</button>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Quản lý Prompt</h1>
+
+        <!-- Form thêm/sửa -->
+        <div class="card">
+            <h2 id="form-title">Prompt</h2>
+            <form id="prompt-form" method="post" action="">
+                <input type="hidden" id="prompt-id" name="id">
+
+                <label for="type">Loại</label>
+                <select id="type" name="type">
+                    <option value="summary">summary</option>
+                    <option value="generate">generate</option>
+                </select>
+
+                <label for="content">Nội dung</label>
+                <textarea id="content" name="content" rows="4"></textarea>
+
+                <label for="description">Mô tả</label>
+                <textarea id="description" name="description" rows="2"></textarea>
+
+                <label>
+                    <input type="checkbox" id="is_active" name="is_active"> Active
+                </label>
+
+                <div>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" onclick="resetForm()" class="btn btn-secondary">Hủy</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Danh sách -->
+        <div class="card">
+            <h2>Danh sách Prompt</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Content</th>
+                        <th>Active</th>
+                        <th>Description</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="prompt-table">
+                    {% for p in prompts %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.type }}</td>
+                        <td>
+                            <pre style="white-space: pre-wrap; margin:0;">{{ p.content }}</pre>
+                        </td>
+                        <td>
+                            {% if p.is_active %}
+                            <span style="color: green;">✔</span>
+                            {% else %}
+                            <span style="color: red;">✘</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ p.description }}</td>
+                        <td class="actions">
+                            <!-- Nút sửa -->
+                            <button type="button" class="btn btn-warning" onclick="editPrompt(this)"
+                                data-id="{{ p.id }}" data-type="{{ p.type }}" data-content="{{ p.content }}"
+                                data-description="{{ p.description }}" data-active="{{ p.is_active }}">
+                                Sửa
+                            </button>
+
+                            <!-- Nút bật/tắt Active -->
+                            <button type="button" onclick="toggleActive('{{ p.id }}', '{{ p.is_active }}')"
+                                class="btn {% if p.is_active %}btn-secondary{% else %}btn-success{% endif %}">
+                                {% if p.is_active %}Tắt{% else %}Bật{% endif %}
+                            </button>
+
+                            <!-- Nút xóa -->
+                            <button type="button" onclick="deletePrompt('{{ p.id }}')" class="btn btn-danger">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{% static 'js/prompt.js' %}"></script>
+</body>
+
+</html>

@@ -125,17 +125,17 @@ DATABASES = {
         'HOST': env("DB_HOST_ANNIE"),
         'PORT': env.int("DB_PORT_ANNIE"),
     },
-    'db_Huy': {   # MySQL
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': env("DB_HOST"),
-        'PORT': env.int("DB_PORT"),
-        'USER': env("DB_USER"),
-        'PASSWORD': env("DB_PASSWORD"),
-        'NAME': env("DB_NAME"),
-        'OPTIONS': {
-            "ssl": {"ca": DB_SSL_CA}
-        }
-    }
+    # 'db_Huy': {   # MySQL
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'HOST': env("DB_HOST"),
+    #     'PORT': env.int("DB_PORT"),
+    #     'USER': env("DB_USER"),
+    #     'PASSWORD': env("DB_PASSWORD"),
+    #     'NAME': env("DB_NAME"),
+    #     'OPTIONS': {
+    #         "ssl": {"ca": DB_SSL_CA}
+    #     }
+    # }
 }
 
 # Password validation

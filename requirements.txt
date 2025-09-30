@@ -16,3 +16,4 @@ redis==6.4.0
 valkey==6.1.1
 psycopg2==2.9.10
 sentence-transformers==5.1.0
+

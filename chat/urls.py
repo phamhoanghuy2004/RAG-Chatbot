@@ -8,5 +8,7 @@ urlpatterns = [
     path('api/chat/compare/',views.compare_models_result, name="compare_models_result"),
     path('api/feedback/', views.feedback, name='feedback'),
     path('api/login/', views.login, name="login"),
-    path('api/loginPage/', views.login_page, name="loginPage")
+    path('api/loginPage/', views.login_page, name="loginPage"),
+    path('api/promptPage/', views.prompt_page, name="PromptPage"),
+    path('api/addprompt/', views.add_or_update_prompt, name="add_or_update_prompt"),
 ]

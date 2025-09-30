@@ -2,7 +2,9 @@ import mysql.connector
 from  mysql.connector import Error
 import os
 from django.conf import settings
-
+from django.core.exceptions import ObjectDoesNotExist
+from .models import User
+from .models import Prompt
 
 class MySQLConnector:
     def __init__(self, host, port , user, password, database,  ssl_ca=None):
@@ -66,20 +68,50 @@ def get_user (query, param):
     finally:
         db.disconnect()
   
-def get_user_by_id (user_id):
-    query = """select *
-            from `users` u
-            where u.user_id = %s """
-    param = (user_id,)
-    return get_user (query,param)
+# def get_user_by_id (user_id):
+#     query = """select *
+#             from `users` u
+#             where u.user_id = %s """
+#     param = (user_id,)
+#     return get_user (query,param)
         
-def get_user_by_account (user_account):
-    query = """select u.user_id, u.user_name, u.user_account, u.user_password, r.role_id, r.role_name
-                from `users` u
-                inner join  `user_roles`  ur on u.user_id = ur.user_id 
-                inner join `roles` r on ur.role_id = r.role_id
-                where u.user_account = %s """
-    param = (user_account,)
-    return get_user (query,param)        
+# def get_user_by_account (user_account):
+#     query = """select u.user_id, u.user_name, u.user_account, u.user_password, r.role_id, r.role_name
+#                 from `users` u
+#                 inner join  `user_roles`  ur on u.user_id = ur.user_id 
+#                 inner join `roles` r on ur.role_id = r.role_id
+#                 where u.user_account = %s """
+#     param = (user_account,)
+#     return get_user (query,param)        
 
+def get_user_by_id (user_id):
+    try:
+        return User.objects.get(id=user_id)
+    except ObjectDoesNotExist:
+        return None
+
+def get_user_by_account(user_account:str):
+    try: 
+        # lấy user + prefetch luôn roles để tránh query thừa
+        user = User.objects.prefetch_related("roles").get(account=user_account)
+        return user
+    except ObjectDoesNotExist:
+        return None
                 
+def get_generate_prompt ():
+    try:
+        return Prompt.objects.filter(
+            type="generate",
+            is_active=True    
+        ).first()
+    except ObjectDoesNotExist:
+        return None
+    
+def get_summary_prompt ():
+    try:
+        return Prompt.objects.filter(
+            type="summary",
+            is_active=True    
+        ).first()
+    except ObjectDoesNotExist:
+        return None
