@@ -5,8 +5,10 @@ import os
 from django.conf import settings
 
 
-def create_summarize_chain (model_name = "llama-3.1-8b-instant", temperature=0.5):
+def create_summarize_chain (model_name = "llama-3.1-8b-instant", temperature=0.5, bypass_summary=False):
     
+    if bypass_summary:
+        return {"element": lambda x : x} | (lambda x: x["element"])  # Return input as output without changes)
     prompt_text = """
         Bạn là một trợ lý ngôn ngữ chuyên rút trích thông tin cho hệ thống RAG. 
         Nhiệm vụ của bạn là đọc kỹ đoạn văn sau và tạo một bản tóm tắt ngắn gọn, súc tích, chứa các ý chính quan trọng nhất, đảm bảo chunk tóm tắt không vượt quá 512 token. 

@@ -13,10 +13,11 @@ import queue
 from . import database_util
 from . import password_encr
 from . import jwt_token_util
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
-from .models import LogEntry
+from .models import LogEntry, Prompt
 import time
 
 @csrf_exempt
@@ -69,6 +70,11 @@ def chat_page (request):
 def login_page (request):
     return render(request,'login.html')
 
+def prompt_page (request):
+    prompts = Prompt.objects.all().order_by("-created_at")
+    print(prompts)
+    return render(request,'prompt.html', context={'prompts' : prompts})
+
 @csrf_exempt
 def upload_pdf (request):
     if request.method != "POST":
@@ -89,7 +95,7 @@ def upload_pdf (request):
     if not database_util.get_user_by_id(payload.get("user_id")): 
         return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
     
-    if payload.get("role") not in ["admin", "staff"]:
+    if not any(role in ["admin", "staff"] for role in payload.get("roles",[])):
         return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
     
     # 2) Input
@@ -148,6 +154,11 @@ def chat(request):
     question = data.get('question', "")
     source = data.get('source',"")
     model = data.get('model', "")
+    
+    # # Optional hybrid retrieval parameters
+    # use_hybrid = data.get('use_hybrid', False)  # Default to False for backward compatibility
+    # hybrid_weights = data.get('hybrid_weights', [0.7, 0.3])  # Dense, Sparse weights
+    
     parts = source.split("_")
     if len(parts) > 2:
         name_software = parts[1]
@@ -155,7 +166,9 @@ def chat(request):
         name_software = None
             
     start_time = time.time()
-    answer = rag_engine.query_with_rag_use_qdrant(question,name_software,model)
+    answer = rag_engine.query_with_rag_use_qdrant(
+        question, name_software, model
+    )
     latency = round(time.time() - start_time, 2)
         
     # Log the user query and RAG answer
@@ -173,6 +186,28 @@ def chat(request):
 
 @csrf_exempt
 def feedback(request):
+    
+    if request.method != "POST":
+        return JsonResponse({"error" : "Yêu cầu là phương thức POST!"},status=405)
+    
+    # 1) AuthN/AuthZ
+    token = request.COOKIES.get("access_token")
+    if not token:
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    payload = jwt_token_util.decode_jwt(token)
+    if not payload:
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not payload.get("user_id"):
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not database_util.get_user_by_id(payload.get("user_id")): 
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not any(role in ["admin", "staff", "user"] for role in payload.get("roles",[])):
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
     data = json.loads(request.body)
     log_id = data.get('log_id')
     accuracy = data.get('accuracy')
@@ -200,7 +235,7 @@ def login (request):
     
     # Kiểm tra thông tin đăng nhập hợp lệ không
     valid_user = database_util.get_user_by_account(username)
-    if not valid_user or not password_encr.check_password(password.encode('utf-8'), valid_user['user_password'].encode('utf-8')):
+    if not valid_user or not password_encr.check_password(password.encode('utf-8'), valid_user.password.encode('utf-8')):
         return JsonResponse({"error" : "Thông tin tài khoản hoặc mật khẩu không chính xác!"}, status=401)
     
     # Tạo jwt token
@@ -227,5 +262,67 @@ def logout (request):
     
     resp = JsonResponse({"message": "Đăng xuất thành công!"})
     resp.delete_cookie("access_token")
-        
+
+
+@csrf_exempt
+def add_or_update_prompt(request):
+    if request.method != "POST":
+        return JsonResponse({"error" : "Yêu cầu là phương thức POST!"}, status=405)
+    
+    # 1) AuthN/AuthZ
+    token = request.COOKIES.get("access_token")
+    if not token:
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    payload = jwt_token_util.decode_jwt(token)
+    if not payload:
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not payload.get("user_id"):
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not database_util.get_user_by_id(payload.get("user_id")): 
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    if not any(role in ["admin", "staff", "user"] for role in payload.get("roles",[])):
+        return JsonResponse({"error": "Không thể thực hiện!"}, status=401)
+    
+    data = json.loads(request.body)
+    
+    prompt_id = data.get("id")
+    type = data.get("type")
+    content = data.get("content")
+    description = data.get("description", "")
+    is_active = data.get("is_active", True)
+    
+    if not all([type, content, description]) or is_active is None:
+        return JsonResponse({"error": "Thiếu dữ liệu bắt buộc!"}, status=400)
+    
+    created_by_id = payload.get("user_id")
+    
+    
+
+    if prompt_id:  # có id thì sửa
+        try:
+            prompt = Prompt.objects.get(id=prompt_id)
+            prompt.type = type
+            prompt.content = content
+            prompt.description = description
+            prompt.is_active = is_active
+            prompt.save()
+            return JsonResponse({"success": True, "message": "Cập nhật Prompt thành công", "id": prompt.id})
+        except Prompt.DoesNotExist:
+            return JsonResponse({"success": False, "message": "Prompt không tồn tại"}, status=404)
+
+    else:  # không có id thì thêm mới
+        prompt = Prompt.objects.create(
+            type=type,
+            content=content,
+            description=description,
+            is_active=is_active,
+            created_by_id=created_by_id
+            
+        )
+        return JsonResponse({"success": True, "message": "Thêm mới Prompt thành công", "id": prompt.id})
+
     

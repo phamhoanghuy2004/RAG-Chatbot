@@ -11,6 +11,32 @@ const modelSelect = document.getElementById('model-select')
 const chatGreeting = document.getElementById('chat-greeting');
 const loadingDots = document.getElementById('loading-dots');
 
+// // Hybrid retrieval elements
+// const hybridCheckbox = document.getElementById('hybrid-checkbox');
+// const weightControls = document.getElementById('weight-controls');
+// const denseWeight = document.getElementById('dense-weight');
+// const denseValue = document.getElementById('dense-value');
+
+// // Handle hybrid toggle
+// if (hybridCheckbox && weightControls) {
+//     hybridCheckbox.addEventListener('change', function() {
+//         if (this.checked) {
+//             weightControls.style.display = 'flex';
+//         } else {
+//             weightControls.style.display = 'none';
+//         }
+//     });
+// }
+
+// // Handle weight slider
+// if (denseWeight && denseValue) {
+//     denseWeight.addEventListener('input', function() {
+//         const dense = parseFloat(this.value);
+//         const sparse = (1.0 - dense).toFixed(1);
+//         denseValue.textContent = `${dense}:${sparse}`;
+//     });
+// }
+
 chooseFileBtn.addEventListener("click", function () {
     showConfirm(
         "Vui lòng đặt tên file theo định dạng:<br><strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>",
@@ -44,15 +70,14 @@ uploadForm.onsubmit = async function (e) {
             location.reload(); // ✅ Reload trang
         } else {
             const error = await res.json();
-            if (res.status === 401){
+            if (res.status === 401) {
                 showConfirm(
                     "⚠ Vui lòng đăng nhập để thực hiện hành động!",
                     function () {
                         window.location.href = "/api/loginPage/";
                     }
                 );
-            }
-            else{
+            } else {
                 showAlert("❌ Thất bại", `Tải PDF thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
             }
         }
@@ -169,6 +194,23 @@ chatForm.onsubmit = async function (e) {
         }
     } else {
         try {
+            // // Get hybrid retrieval settings
+            // const useHybrid = hybridCheckbox ? hybridCheckbox.checked : false;
+            // const denseWeightValue = denseWeight ? parseFloat(denseWeight.value) : 0.7;
+            // const sparseWeightValue = 1.0 - denseWeightValue;
+            
+            // const requestData = {
+            //     question,
+            //     source: selectedSource,
+            //     model: selectedModel
+            // };
+            
+            // // Add hybrid settings if enabled
+            // if (useHybrid) {
+            //     requestData.use_hybrid = true;
+            //     requestData.hybrid_weights = [denseWeightValue, sparseWeightValue];
+            // }
+            
             const res = await fetch('/api/chat/', {
                 method: 'POST',
                 headers: {
@@ -256,33 +298,33 @@ function showAlert(title, message) {
 
 // Restore selection on load
 if (sessionStorage.getItem('selectedDoc')) {
-  docSelect.value = sessionStorage.getItem('selectedDoc');
+    docSelect.value = sessionStorage.getItem('selectedDoc');
 }
 
 // Save changes once user pick a document
 docSelect.addEventListener('change', () => {
-  sessionStorage.setItem('selectedDoc', docSelect.value);
-  sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
+    sessionStorage.setItem('selectedDoc', docSelect.value);
+    sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
 });
 
 // Pop up message if no doc selected yet - appear only once in every tab
 (function () {
-  function showDocReminderIfNeeded() {
-    if (sessionStorage.getItem("docSelected") === "1") return;
-    const select = document.getElementById("doc-select");
-    if (!select) return;
+    function showDocReminderIfNeeded() {
+        if (sessionStorage.getItem("docSelected") === "1") return;
+        const select = document.getElementById("doc-select");
+        if (!select) return;
 
-    const hasSelection = select.value && select.value.trim() !== "";
-    if (!hasSelection) {
-      showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+        const hasSelection = select.value && select.value.trim() !== "";
+        if (!hasSelection) {
+            showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+        }
     }
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
-  } else {
-    setTimeout(showDocReminderIfNeeded, 0);
-  }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
+    } else {
+        setTimeout(showDocReminderIfNeeded, 0);
+    }
 })();
 
 function appendFeedbackForm(logId) {
@@ -345,16 +387,40 @@ function appendFeedbackForm(logId) {
             alert("Vui lòng chọn mức độ hài lòng!");
             return;
         }
-        await fetch('/api/feedback/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                log_id: logId,
-                accuracy: accuracy,
-                user_satisfaction: selectedStar
-            })
-        });
-        submitBtn.textContent = "Đánh giá lại";
+        try {
+            const res = await fetch('/api/feedback/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // để gửi cookie access_token
+                body: JSON.stringify({
+                    log_id: logId,
+                    accuracy: accuracy,
+                    user_satisfaction: selectedStar
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                showAlert("✅ Thành công", data.message || "Đã gửi feedback!");
+                submitBtn.textContent = "Đánh giá lại";
+            } else {
+                const error = await res.json();
+                if (res.status === 401) {
+                    showConfirm(
+                        "⚠ Vui lòng đăng nhập để thực hiện hành động!",
+                        function () {
+                            window.location.href = "/api/loginPage/";
+                        }
+                    );
+                } else {
+                    showAlert("❌ Thất bại", `Gửi feedback thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
+                }
+            }
+        } catch (e) {
+            showAlert("❌ Lỗi hệ thống", e.message);
+        }
     };
     feedbackDiv.appendChild(submitBtn);
 

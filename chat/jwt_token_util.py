@@ -6,10 +6,10 @@ from django.conf import settings
 def create_jwt_token (user):
     now = datetime.datetime.now(datetime.timezone.utc)
     payload = {
-        "user_id" : user.get('user_id'),
-        "role" : user.get('role_name'),
-        "user_name" : user.get('user_name'),
-        "type": user.get('access'),
+        "user_id" : user.id,
+        "roles" : [ role.name for role in user.roles.all()],
+        "user_name" : user.name,
+        "type": "access",
         "exp" : now + settings.ACCESS_TOKEN_LIFETIME,
         "iat" : now
     }
