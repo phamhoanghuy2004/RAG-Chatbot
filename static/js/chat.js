@@ -44,15 +44,14 @@ uploadForm.onsubmit = async function (e) {
             location.reload(); // ✅ Reload trang
         } else {
             const error = await res.json();
-            if (res.status === 401){
+            if (res.status === 401) {
                 showConfirm(
                     "⚠ Vui lòng đăng nhập để thực hiện hành động!",
                     function () {
                         window.location.href = "/api/loginPage/";
                     }
                 );
-            }
-            else{
+            } else {
                 showAlert("❌ Thất bại", `Tải PDF thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
             }
         }
@@ -256,33 +255,33 @@ function showAlert(title, message) {
 
 // Restore selection on load
 if (sessionStorage.getItem('selectedDoc')) {
-  docSelect.value = sessionStorage.getItem('selectedDoc');
+    docSelect.value = sessionStorage.getItem('selectedDoc');
 }
 
 // Save changes once user pick a document
 docSelect.addEventListener('change', () => {
-  sessionStorage.setItem('selectedDoc', docSelect.value);
-  sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
+    sessionStorage.setItem('selectedDoc', docSelect.value);
+    sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
 });
 
 // Pop up message if no doc selected yet - appear only once in every tab
 (function () {
-  function showDocReminderIfNeeded() {
-    if (sessionStorage.getItem("docSelected") === "1") return;
-    const select = document.getElementById("doc-select");
-    if (!select) return;
+    function showDocReminderIfNeeded() {
+        if (sessionStorage.getItem("docSelected") === "1") return;
+        const select = document.getElementById("doc-select");
+        if (!select) return;
 
-    const hasSelection = select.value && select.value.trim() !== "";
-    if (!hasSelection) {
-      showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+        const hasSelection = select.value && select.value.trim() !== "";
+        if (!hasSelection) {
+            showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
+        }
     }
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
-  } else {
-    setTimeout(showDocReminderIfNeeded, 0);
-  }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
+    } else {
+        setTimeout(showDocReminderIfNeeded, 0);
+    }
 })();
 
 function appendFeedbackForm(logId) {
@@ -345,16 +344,40 @@ function appendFeedbackForm(logId) {
             alert("Vui lòng chọn mức độ hài lòng!");
             return;
         }
-        await fetch('/api/feedback/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                log_id: logId,
-                accuracy: accuracy,
-                user_satisfaction: selectedStar
-            })
-        });
-        submitBtn.textContent = "Đánh giá lại";
+        try {
+            const res = await fetch('/api/feedback/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // để gửi cookie access_token
+                body: JSON.stringify({
+                    log_id: logId,
+                    accuracy: accuracy,
+                    user_satisfaction: selectedStar
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                showAlert("✅ Thành công", data.message || "Đã gửi feedback!");
+                submitBtn.textContent = "Đánh giá lại";
+            } else {
+                const error = await res.json();
+                if (res.status === 401) {
+                    showConfirm(
+                        "⚠ Vui lòng đăng nhập để thực hiện hành động!",
+                        function () {
+                            window.location.href = "/api/loginPage/";
+                        }
+                    );
+                } else {
+                    showAlert("❌ Thất bại", `Gửi feedback thất bại.<br>Lỗi: ${error.error || "Không rõ nguyên nhân."}`);
+                }
+            }
+        } catch (e) {
+            showAlert("❌ Lỗi hệ thống", e.message);
+        }
     };
     feedbackDiv.appendChild(submitBtn);
 

@@ -64,7 +64,7 @@ SECRET_KEY = 'django-insecure-v()x6jbow+&gt6%ly=9k+uemx%#vj%-lr9l5!632c(^9qc^p&#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['c41c8fe96300.ngrok-free.app']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -125,17 +125,17 @@ DATABASES = {
         'HOST': env("DB_HOST_ANNIE"),
         'PORT': env.int("DB_PORT_ANNIE"),
     },
-    'db_Huy': {   # MySQL
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': env("DB_HOST"),
-        'PORT': env.int("DB_PORT"),
-        'USER': env("DB_USER"),
-        'PASSWORD': env("DB_PASSWORD"),
-        'NAME': env("DB_NAME"),
-        'OPTIONS': {
-            "ssl": {"ca": DB_SSL_CA}
-        }
-    }
+    # 'db_Huy': {   # MySQL
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'HOST': env("DB_HOST"),
+    #     'PORT': env.int("DB_PORT"),
+    #     'USER': env("DB_USER"),
+    #     'PASSWORD': env("DB_PASSWORD"),
+    #     'NAME': env("DB_NAME"),
+    #     'OPTIONS': {
+    #         "ssl": {"ca": DB_SSL_CA}
+    #     }
+    # }
 }
 
 # Password validation

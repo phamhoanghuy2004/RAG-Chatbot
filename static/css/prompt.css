@@ -1,0 +1,205 @@
+body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1,
+h2 {
+    margin-bottom: 15px;
+}
+
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+form input[type="text"],
+
+form textarea {
+    width: 100%;        /* chiếm hết chiều ngang của form */
+    min-height: 250px;  /* tăng chiều cao mặc định */
+    resize: vertical;   /* cho phép người dùng kéo dãn theo chiều dọc */
+    font-size: 14px;
+    padding: 10px;
+    line-height: 1.5;
+}
+
+form select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+form input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: #fff;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th,
+table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+table th {
+    background: #f1f1f1;
+}
+
+.truncate {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.actions button {
+    margin-right: 5px;
+}
+
+/* Style riêng cho nút toggle active */
+.btn-toggle-on {
+    background: #16a34a; /* xanh lá */
+    color: #fff;
+}
+
+.btn-toggle-on:hover {
+    background: #15803d; /* xanh đậm hơn khi hover */
+}
+
+.btn-toggle-off {
+    background: #6b7280; /* xám */
+    color: #fff;
+}
+
+.btn-toggle-off:hover {
+    background: #4b5563; /* xám đậm hơn khi hover */
+}
+
+
+/* CSS phần thông báo */
+.popup-overlay {
+    display: none; /* Ẩn mặc định */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-box {
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.popup-box h2 {
+    margin-top: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.popup-box p {
+    font-size: 15px;
+    color: #555;
+}
+
+.popup-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.popup-actions button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.popup-actions button:hover {
+    opacity: 0.9;
+}
+
+#confirmYes {
+    background: #4CAF50;
+    color: white;
+}
+
+#confirmNo, .cancel {
+    background: #ccc;
+    color: black;
+}
+
+#alertOk {
+    background: #2196F3;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+/* CSS phần thông báo */
