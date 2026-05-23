@@ -343,5 +343,3 @@ def add_or_update_prompt(request):
             
         )
         return JsonResponse({"success": True, "message": "Thêm mới Prompt thành công", "id": prompt.id})
-
-    
