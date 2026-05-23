@@ -117,25 +117,17 @@ WSGI_APPLICATION = 'RAGchatbot.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {   # PostgreSQL
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env("DB_NAME_ANNIE"),
-        'USER': env("DB_USER_ANNIE"),
-        'PASSWORD': env("DB_PASSWORD_ANNIE"),
-        'HOST': env("DB_HOST_ANNIE"),
-        'PORT': env.int("DB_PORT_ANNIE"),
-    },
-    # 'db_Huy': {   # MySQL
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'HOST': env("DB_HOST"),
-    #     'PORT': env.int("DB_PORT"),
-    #     'USER': env("DB_USER"),
-    #     'PASSWORD': env("DB_PASSWORD"),
-    #     'NAME': env("DB_NAME"),
-    #     'OPTIONS': {
-    #         "ssl": {"ca": DB_SSL_CA}
-    #     }
-    # }
+    'default': {  
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': env("DB_HOST"),
+        'PORT': env.int("DB_PORT"),
+        'USER': env("DB_USER"),
+        'PASSWORD': env("DB_PASSWORD"),
+        'NAME': env("DB_NAME"),
+        'OPTIONS': {
+            "ssl": {"ca": DB_SSL_CA}
+        }
+    }
 }
 
 # Password validation

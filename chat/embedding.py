@@ -11,6 +11,7 @@ from django.conf import settings
 
 from langchain_community.retrievers import TFIDFRetriever
 from langchain.retrievers import EnsembleRetriever
+from qdrant_client.http.models import PayloadSchemaType
 
 # Tạo embedding model tối ưu cho tiếng Việt
 embedding_model = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL)
@@ -145,15 +146,31 @@ def clear_tfidf_cache(source=None):
 
 
 def check_collection():
-    # Nếu collection chưa có thì tạo
     collections = qdrant_client.get_collections().collections
-    if not any(c.name == collection_name for c in collections): 
+
+    # Nếu chưa có collection thì tạo
+    if not any(c.name == collection_name for c in collections):
         qdrant_client.create_collection(
             collection_name=collection_name,
-            vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE)
+            vectors_config=models.VectorParams(
+                size=768,
+                distance=models.Distance.COSINE
+            )
         )
-    
 
+    # Ensure payload indexes
+    qdrant_client.create_payload_index(
+        collection_name=collection_name,
+        field_name="metadata.source",
+        field_schema=PayloadSchemaType.KEYWORD
+    )
+
+    qdrant_client.create_payload_index(
+        collection_name=collection_name,
+        field_name="metadata.doc_id",
+        field_schema=PayloadSchemaType.KEYWORD
+    )
+        
 def create_retriever_multivector (source, id_key = "doc_id", k = 3):  # Increased default k
     check_collection ()
     

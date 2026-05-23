@@ -43,12 +43,12 @@ class MySQLConnector:
             
 def get_db_connection():
     return MySQLConnector(
-        host=settings.DATABASES['db_Huy']['HOST'],
-        user=settings.DATABASES['db_Huy']['USER'],
-        port=settings.DATABASES['db_Huy']['PORT'],
-        password=settings.DATABASES['db_Huy']['PASSWORD'],
-        database=settings.DATABASES['db_Huy']['NAME'],
-        ssl_ca=settings.DATABASES['db_Huy']['OPTIONS']['ssl']['ca']
+        host=settings.DATABASES['default']['HOST'],
+        user=settings.DATABASES['default']['USER'],
+        port=settings.DATABASES['default']['PORT'],
+        password=settings.DATABASES['default']['PASSWORD'],
+        database=settings.DATABASES['default']['NAME'],
+        ssl_ca=settings.DATABASES['default']['OPTIONS']['ssl']['ca']
     )
     
 def get_user (query, param):
@@ -67,23 +67,7 @@ def get_user (query, param):
         return None
     finally:
         db.disconnect()
-  
-# def get_user_by_id (user_id):
-#     query = """select *
-#             from `users` u
-#             where u.user_id = %s """
-#     param = (user_id,)
-#     return get_user (query,param)
-        
-# def get_user_by_account (user_account):
-#     query = """select u.user_id, u.user_name, u.user_account, u.user_password, r.role_id, r.role_name
-#                 from `users` u
-#                 inner join  `user_roles`  ur on u.user_id = ur.user_id 
-#                 inner join `roles` r on ur.role_id = r.role_id
-#                 where u.user_account = %s """
-#     param = (user_account,)
-#     return get_user (query,param)        
-
+       
 def get_user_by_id (user_id):
     try:
         return User.objects.get(id=user_id)

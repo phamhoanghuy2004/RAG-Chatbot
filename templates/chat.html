@@ -17,10 +17,8 @@
   <!-- Popup xác nhận -->
   <div id="customConfirm" class="popup-overlay">
     <div class="popup-box">
-      <h2>📄 Quy định</h2>
-      <p>Vui lòng đặt tên file theo định dạng:<br>
-        <strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>
-      </p>
+      <h2>📄 Xác nhận</h2>
+      <p></p>
       <div class="popup-actions">
         <button id="confirmYes">Tiếp tục</button>
         <button id="confirmNo" class="cancel">Hủy</button>
@@ -109,7 +107,7 @@
     </div>
   </div>
 
-  <script src="{% static 'js/chat.js' %}"></script>
+  <script src="{% static 'js/chat.js' %}?v={% now 'U' %}"></script>
 </body>
 
 </html>

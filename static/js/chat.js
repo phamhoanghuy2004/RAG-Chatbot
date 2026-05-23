@@ -38,12 +38,7 @@ const loadingDots = document.getElementById('loading-dots');
 // }
 
 chooseFileBtn.addEventListener("click", function () {
-    showConfirm(
-        "Vui lòng đặt tên file theo định dạng:<br><strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>",
-        function () {
-            realFileInput.click(); // Mở file picker
-        }
-    );
+    realFileInput.click(); // Mở file picker
 });
 
 realFileInput.addEventListener("change", function () {
