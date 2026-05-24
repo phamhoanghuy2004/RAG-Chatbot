@@ -27,14 +27,25 @@ def compare_models_result (request):
     
     data = json.loads(request.body)
     question = data.get('question',"")
-    source = data.get('source',"")
+    source_raw = data.get('source',"")
     
+    if isinstance(source_raw, list):
+        sources_list = [s.strip() for s in source_raw if s.strip()]
+    elif isinstance(source_raw, str):
+        sources_list = [s.strip() for s in source_raw.split(',') if s.strip()]
+    else:
+        sources_list = []
+        
     # Kiểm tra xem tài liệu có tồn tại trong database không
-    from .models import Document
-    if not source or not Document.objects.filter(document_name=source).exists():
+    if not sources_list:
         return StreamingHttpResponse("Error: Tài liệu không tồn tại hoặc chưa được xử lý!", status=400)
         
-    name_software = os.path.splitext(source)[0] if source else None
+    from .models import Document
+    for doc_name in sources_list:
+        if not Document.objects.filter(document_name=doc_name).exists():
+            return StreamingHttpResponse(f"Error: Tài liệu {doc_name} không tồn tại hoặc chưa được xử lý!", status=400)
+        
+    name_software = [os.path.splitext(s)[0] for s in sources_list]
     model1 = data.get('model1',"")
     model2 = data.get('model2',"")
     
@@ -170,19 +181,30 @@ def chat(request):
     
     data = json.loads(request.body)
     question = data.get('question', "")
-    source = data.get('source',"")
+    source_raw = data.get('source',"")
     model = data.get('model', "")
     
+    if isinstance(source_raw, list):
+        sources_list = [s.strip() for s in source_raw if s.strip()]
+    elif isinstance(source_raw, str):
+        sources_list = [s.strip() for s in source_raw.split(',') if s.strip()]
+    else:
+        sources_list = []
+    
     # Kiểm tra xem tài liệu có tồn tại trong database không
-    from .models import Document
-    if not source or not Document.objects.filter(document_name=source).exists():
+    if not sources_list:
         return JsonResponse({"error": "Tài liệu không tồn tại hoặc chưa được xử lý!"}, status=400)
+        
+    from .models import Document
+    for doc_name in sources_list:
+        if not Document.objects.filter(document_name=doc_name).exists():
+            return JsonResponse({"error": f"Tài liệu {doc_name} không tồn tại hoặc chưa được xử lý!"}, status=400)
     
     # # Optional hybrid retrieval parameters
     # use_hybrid = data.get('use_hybrid', False)  # Default to False for backward compatibility
     # hybrid_weights = data.get('hybrid_weights', [0.7, 0.3])  # Dense, Sparse weights
     
-    name_software = os.path.splitext(source)[0] if source else None
+    name_software = [os.path.splitext(s)[0] for s in sources_list]
             
     start_time = time.time()
     answer = rag_engine.query_with_rag_use_qdrant(

@@ -3,11 +3,9 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.chunking import HybridChunker
 import torch
-import re
-import numpy as np
 from . import summary
-from .embedding import embedding_model
 
 
 def extract_text_by_docling(pdf_path: str):
@@ -38,116 +36,69 @@ def extract_text_by_docling(pdf_path: str):
     return result
 
 
-def split_into_sentences(text: str):
+def chunk_by_title(docling_result):
     """
-    Splits text into logical sentences or rows (keeping table rows whole).
-    """
-    lines = text.split('\n')
-    sentences = []
-    for line in lines:
-        line_str = line.strip()
-        if not line_str:
-            continue
-        # Nếu là dòng trong bảng (bắt đầu và kết thúc bằng |), giữ nguyên dòng đó
-        if line_str.startswith('|') and line_str.endswith('|'):
-            sentences.append(line_str)
-        else:
-            # Ngược lại, chia thành các câu dựa vào dấu chấm, hỏi, cảm thán theo sau bởi khoảng trắng
-            parts = re.split(r'(?<=[.!?])\s+', line_str)
-            for p in parts:
-                p_str = p.strip()
-                if p_str:
-                    sentences.append(p_str)
-    return sentences
+    Parent-Child Retrieval / Map-Reduce RAG Chunking:
+    Sử dụng HybridChunker của Docling với max_tokens cực lớn (1.000.000)
+    để gom toàn bộ nội dung dưới mỗi Heading/Title thành đúng 1 chunk duy nhất.
 
+    Thuật toán HybridChunker: gom tất cả đoạn văn có chung Tiêu đề,
+    chỉ dừng khi gặp Tiêu đề mới HOẶC chạm max_tokens.
+    → max_tokens khổng lồ = chỉ cắt tại ranh giới heading.
 
-def chunk_recursive(markdown_text: str):
+    Bước summarize phía sau sẽ lo việc nén các chunk dài.
     """
-    Semantic Chunker:
-    1. Chia văn bản thành các câu đơn lẻ (giữ nguyên cấu trúc bảng/list).
-    2. Nhúng vector từng câu qua embedding_model.
-    3. Tính toán khoảng cách cosine similarity giữa các câu liên tiếp.
-    4. Cắt chunk khi độ tương đồng tụt dưới ngưỡng threshold động (mean - 1.0 * std)
-       đồng thời đảm bảo ràng buộc kích thước (tối thiểu 300 ký tự, tối đa 1200 ký tự).
-    """
-    # Bước 1: Tách các câu thô
-    sentences = split_into_sentences(markdown_text)
-    if not sentences:
+    doc = docling_result.document
+
+    chunker = HybridChunker(
+        max_tokens=1_000_000,   # Cực lớn → chỉ split khi gặp Heading mới
+        merge_peers=True,       # Gom các đoạn cùng cấp heading lại với nhau
+    )
+
+    chunks = list(chunker.chunk(doc))
+
+    if not chunks:
+        print("⚠️ HybridChunker không tạo được chunk nào!")
         return [], []
-        
-    print(f"Tổng số câu/dòng được trích xuất: {len(sentences)}")
 
-    # Bước 2: Nhúng vector các câu
-    embeddings = [np.array(e) for e in embedding_model.embed_documents(sentences)]
-
-    # Bước 3: Tính toán khoảng cách tương đồng giữa các câu liên tiếp
-    similarities = []
-    for i in range(len(embeddings) - 1):
-        vec1 = embeddings[i]
-        vec2 = embeddings[i+1]
-        norm1 = np.linalg.norm(vec1)
-        norm2 = np.linalg.norm(vec2)
-        if norm1 > 0 and norm2 > 0:
-            sim = np.dot(vec1, vec2) / (norm1 * norm2)
-        else:
-            sim = 0.0
-        similarities.append(sim)
-
-    # Xác định ngưỡng threshold động
-    if similarities:
-        mean_sim = np.mean(similarities)
-        std_sim = np.std(similarities)
-        # Ngưỡng động, giới hạn trong khoảng [0.78, 0.84] để đảm bảo an toàn
-        dynamic_threshold = mean_sim - 1.0 * std_sim
-        threshold = max(0.78, min(0.84, dynamic_threshold))
-        print(f"Chỉ số tương đồng: Mean={mean_sim:.4f}, Std={std_sim:.4f} -> Ngưỡng cắt (threshold)={threshold:.4f}")
-    else:
-        threshold = 0.82
-
-    # Bước 4: Tạo nhát cắt dựa trên ngưỡng và độ dài tối thiểu
-    min_chars = 300
-    
+    # Xây dựng danh sách contexts: mỗi chunk = heading path + nội dung
     contexts = []
-    current_chunk = []
-    current_length = 0
-    
-    for i, sentence in enumerate(sentences):
-        current_chunk.append(sentence)
-        current_length += len(sentence) + 1
-        
-        if i < len(similarities):
-            sim = similarities[i]
-            # Điều kiện cắt: 
-            # - Độ tương đồng dưới ngưỡng AND độ dài hiện tại đạt tối thiểu 300 ký tự
-            should_split = (sim < threshold and current_length >= min_chars)
-            
-            if should_split:
-                contexts.append("\n".join(current_chunk))
-                current_chunk = []
-                current_length = 0
-                
-    if current_chunk:
-        contexts.append("\n".join(current_chunk))
+    for i, chunk in enumerate(chunks):
+        headings = []
+        if chunk.meta and hasattr(chunk.meta, 'headings') and chunk.meta.headings:
+            headings = chunk.meta.headings
 
-    # Log các chunk ra console để quan sát kết quả phân đoạn
-    print(f"\n=================== KẾT QUẢ PHÂN ĐOẠN TÀI LIỆU (SEMANTIC CHUNKING) ({len(contexts)} chunks) ===================")
-    for idx, chunk in enumerate(contexts):
-        print(f"\n--- [CHUNK {idx+1}/{len(contexts)}] (Độ dài: {len(chunk)} ký tự) ---")
-        print(chunk.strip())
+        title = " > ".join(headings) if headings else f"Phần {i + 1}"
+
+        # Gắn heading path vào đầu chunk để giữ ngữ cảnh khi retrieve
+        context_text = f"## {title}\n\n{chunk.text}"
+        contexts.append(context_text)
+
+    # =================== LOG KẾT QUẢ PHÂN ĐOẠN ===================
+    print(f"\n{'=' * 90}")
+    print(f"  KẾT QUẢ PHÂN ĐOẠN THEO TITLE (HybridChunker) — {len(contexts)} chunks")
+    print(f"{'=' * 90}")
+    for idx, ctx in enumerate(contexts):
+        print(f"\n--- [CHUNK {idx + 1}/{len(contexts)}] (Độ dài: {len(ctx)} ký tự) ---")
+        # Chỉ in 500 ký tự đầu để log không quá dài
+        preview = ctx[:500].strip()
+        if len(ctx) > 500:
+            preview += "\n... (đã cắt bớt để hiển thị)"
+        print(preview)
         print("-" * 80)
-    print("====================================================================================\n")
-    
-    # Generate summaries for each chunk with sequential execution, proactive delay, and rate limit retries
+    print(f"{'=' * 90}\n")
+
+    # =================== SUMMARIZE TỪNG CHUNK ===================
     summarize_chain = summary.create_summarize_chain(bypass_summary=False)
     summaries = []
     import time
-    
+
     for i, ctx in enumerate(contexts):
         # Proactive sleep to prevent hitting TPM limits on large documents
         if i > 0:
             time.sleep(1.0)
-            
-        print(f"Summarizing chunk {i+1}/{len(contexts)}...")
+
+        print(f"📝 Summarizing chunk {i + 1}/{len(contexts)} ({len(ctx)} ký tự)...")
         retries = 4
         delay = 2.0
         while retries > 0:
@@ -158,16 +109,16 @@ def chunk_recursive(markdown_text: str):
             except Exception as e:
                 err_str = str(e).lower()
                 if "rate limit" in err_str or "429" in err_str or "rate_limit_exceeded" in err_str:
-                    print(f"Rate limit hit at chunk {i+1}. Retrying in {delay}s... (Retries left: {retries})")
+                    print(f"⏳ Rate limit hit at chunk {i + 1}. Retrying in {delay}s... (Retries left: {retries})")
                     time.sleep(delay)
                     delay *= 2.0  # Exponential backoff
                     retries -= 1
                 else:
-                    print(f"Error summarizing chunk {i+1}: {e}")
+                    print(f"❌ Error summarizing chunk {i + 1}: {e}")
                     summaries.append(ctx)  # Fallback to original text
                     break
         else:
-            print(f"Failed to summarize chunk {i+1} after retries. Using original text as summary.")
+            print(f"❌ Failed to summarize chunk {i + 1} after retries. Using original text as summary.")
             summaries.append(ctx)  # Fallback to original text
-            
+
     return contexts, summaries
