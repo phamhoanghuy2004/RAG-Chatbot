@@ -38,12 +38,7 @@ const loadingDots = document.getElementById('loading-dots');
 // }
 
 chooseFileBtn.addEventListener("click", function () {
-    showConfirm(
-        "Vui lòng đặt tên file theo định dạng:<br><strong>HDSD_&lt;Tên phần mềm&gt;_&lt;release&gt;.pdf</strong>",
-        function () {
-            realFileInput.click(); // Mở file picker
-        }
-    );
+    realFileInput.click(); // Mở file picker
 });
 
 realFileInput.addEventListener("change", function () {
@@ -99,7 +94,8 @@ chatForm.onsubmit = async function (e) {
         chatGreeting.style.display = 'none';
     }
 
-    const selectedSource = docSelect.value;
+    // Nếu chưa chọn tài liệu → gán mặc định "Tai_Lieu_Full_Part"
+    const selectedSource = docSelect.value || "Tai_Lieu_Full_Part";
     const selectedModel = modelSelect.value;
 
     // Hiển thị câu hỏi của người dùng
@@ -307,25 +303,8 @@ docSelect.addEventListener('change', () => {
     sessionStorage.setItem('docSelected', docSelect.value ? '1' : '');
 });
 
-// Pop up message if no doc selected yet - appear only once in every tab
-(function () {
-    function showDocReminderIfNeeded() {
-        if (sessionStorage.getItem("docSelected") === "1") return;
-        const select = document.getElementById("doc-select");
-        if (!select) return;
 
-        const hasSelection = select.value && select.value.trim() !== "";
-        if (!hasSelection) {
-            showAlert("Thông báo", "Vui lòng chọn tài liệu phần mềm ở bên trên nhé.");
-        }
-    }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", showDocReminderIfNeeded);
-    } else {
-        setTimeout(showDocReminderIfNeeded, 0);
-    }
-})();
 
 function appendFeedbackForm(logId) {
     const feedbackDiv = document.createElement('div');

@@ -27,12 +27,25 @@ def compare_models_result (request):
     
     data = json.loads(request.body)
     question = data.get('question',"")
-    source = data.get('source',"")
-    parts = source.split("_")
-    if len(parts) > 2:
-        name_software = parts[1]
+    source_raw = data.get('source',"")
+    
+    if isinstance(source_raw, list):
+        sources_list = [s.strip() for s in source_raw if s.strip()]
+    elif isinstance(source_raw, str):
+        sources_list = [s.strip() for s in source_raw.split(',') if s.strip()]
     else:
-        name_software = None
+        sources_list = []
+        
+    # Kiểm tra xem tài liệu có tồn tại trong database không
+    if not sources_list:
+        return StreamingHttpResponse("Error: Tài liệu không tồn tại hoặc chưa được xử lý!", status=400)
+        
+    from .models import Document
+    for doc_name in sources_list:
+        if not Document.objects.filter(document_name=doc_name).exists():
+            return StreamingHttpResponse(f"Error: Tài liệu {doc_name} không tồn tại hoặc chưa được xử lý!", status=400)
+        
+    name_software = [os.path.splitext(s)[0] for s in sources_list]
     model1 = data.get('model1',"")
     model2 = data.get('model2',"")
     
@@ -62,9 +75,9 @@ def compare_models_result (request):
         
 
 def chat_page (request):
-    # Lấy tất cả các file pdf đang có trong thư mục
-    docs_dir = os.path.join(settings.BASE_DIR,'docs')
-    docs  = util.get_valid_pdf_files(docs_dir)
+    # Lấy danh sách các tài liệu đã lưu trong Database
+    from .models import Document
+    docs = [doc.document_name for doc in Document.objects.all()]
     return render(request,'chat.html',context={'docs' : docs})
 
 def login_page (request):
@@ -115,7 +128,7 @@ def upload_pdf (request):
         return JsonResponse({"error": f"File vượt quá {MAX_MB} MB!"}, status=400)
     
     name_software, version_software = util.extract_software_name(pdf.name)
-    if not name_software or not version_software:
+    if not name_software:
         return JsonResponse({"error": "File không hợp lệ!"}, status=400)
     
     
@@ -139,7 +152,23 @@ def upload_pdf (request):
     try:
         ingest_pdf.ingest_pdf_docling(saved_absolute_path, name_software, version_software, images_dir)
     except Exception:
+        if os.path.exists(saved_absolute_path):
+            try:
+                os.remove(saved_absolute_path)
+            except Exception:
+                pass
         return JsonResponse({"error": f"Không thể upload file!"}, status=500)
+
+    # Xóa file vật lý tạm sau khi đã nạp và lưu chỉ mục xong
+    if os.path.exists(saved_absolute_path):
+        try:
+            os.remove(saved_absolute_path)
+        except Exception as ex:
+            print(f"Lỗi khi xóa file tạm: {ex}")
+
+    # Ghi nhận tài liệu đã xử lý vào database
+    from .models import Document
+    Document.objects.update_or_create(document_name=pdf.name)
 
     return JsonResponse({'message': 'Upload file thành công!'})
         
@@ -152,18 +181,30 @@ def chat(request):
     
     data = json.loads(request.body)
     question = data.get('question', "")
-    source = data.get('source',"")
+    source_raw = data.get('source',"")
     model = data.get('model', "")
+    
+    if isinstance(source_raw, list):
+        sources_list = [s.strip() for s in source_raw if s.strip()]
+    elif isinstance(source_raw, str):
+        sources_list = [s.strip() for s in source_raw.split(',') if s.strip()]
+    else:
+        sources_list = []
+    
+    # Kiểm tra xem tài liệu có tồn tại trong database không
+    if not sources_list:
+        return JsonResponse({"error": "Tài liệu không tồn tại hoặc chưa được xử lý!"}, status=400)
+        
+    from .models import Document
+    for doc_name in sources_list:
+        if not Document.objects.filter(document_name=doc_name).exists():
+            return JsonResponse({"error": f"Tài liệu {doc_name} không tồn tại hoặc chưa được xử lý!"}, status=400)
     
     # # Optional hybrid retrieval parameters
     # use_hybrid = data.get('use_hybrid', False)  # Default to False for backward compatibility
     # hybrid_weights = data.get('hybrid_weights', [0.7, 0.3])  # Dense, Sparse weights
     
-    parts = source.split("_")
-    if len(parts) > 2:
-        name_software = parts[1]
-    else:
-        name_software = None
+    name_software = [os.path.splitext(s)[0] for s in sources_list]
             
     start_time = time.time()
     answer = rag_engine.query_with_rag_use_qdrant(
@@ -324,5 +365,3 @@ def add_or_update_prompt(request):
             
         )
         return JsonResponse({"success": True, "message": "Thêm mới Prompt thành công", "id": prompt.id})
-
-    

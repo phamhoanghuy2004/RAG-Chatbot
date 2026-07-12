@@ -13,17 +13,23 @@ collection_name = settings.COLLECTION_NAME
 
 def remove_old_software_pdf(docs_dir, full_name, name_software, version_software):
     try:
-        for f in get_valid_pdf_files(docs_dir):
-            if f and f.lower() == full_name.lower():
-                list_uuids = update_points(name_software, version_software)
-                update_docstore (list_uuids)
-                # Clear TF-IDF cache for this source
-                from . import embedding
-                embedding.clear_tfidf_cache(name_software)
-                old_file_path = os.path.join(docs_dir, f)
-                if default_storage.exists(old_file_path):
-                    default_storage.delete(old_file_path)
-                break
+        from .models import Document
+        
+        # 1) Xóa bản ghi trong database trước
+        Document.objects.filter(document_name=full_name).delete()
+        
+        # 2) Xóa điểm vector ở Qdrant và dữ liệu ở Valkey
+        list_uuids = update_points(name_software, version_software)
+        update_docstore(list_uuids)
+        
+        # 3) Xóa cache TF-IDF
+        from . import embedding
+        embedding.clear_tfidf_cache(name_software)
+        
+        # 4) Nếu file vật lý vẫn tồn tại (ví dụ còn sót lại), tiến hành xóa
+        old_file_path = os.path.join(docs_dir, full_name)
+        if default_storage.exists(old_file_path):
+            default_storage.delete(old_file_path)
     except Exception as e:
         print(f"Error when deleting old file: {e}")   
         raise         
@@ -58,31 +64,42 @@ def get_valid_pdf_files(docs_dir):
         return []
 
 def is_valid_pdf_name(file_name: str) -> bool:
-    pattern = r'^HDSD_[a-zA-Z0-9_]+_[a-zA-Z0-9_]+\.pdf$'
-    return re.match(pattern, file_name, re.IGNORECASE) is not None
+    return file_name.lower().endswith('.pdf')
 
-def extract_software_name (file_name: str) -> str:
+def extract_software_name (file_name: str) -> tuple:
     """
-    Tách phần mềm từ định dạng: HDSD_<TênPhanMem>_<Release>.pdf
+    Tách phần mềm từ tên file PDF (lấy tên file bỏ đuôi mở rộng, không cần version)
     """
-    parts = file_name.split('_')
-    if (len(parts) >=3):
-        return parts[1], parts[2].rsplit('.',1)[0]
-    return None, None
+    name_without_ext = os.path.splitext(file_name)[0]
+    return name_without_ext, None
 
-def update_points (name_software: str, version_software: str):
-    
-    filter_condition = Filter (
-        must = [
-            FieldCondition (
-                key = "metadata.source",
-                match = MatchValue(value=name_software)
-            ),
+def update_points (name_software: str, version_software: str = None):
+    # Kiểm tra xem collection đã tồn tại trong Qdrant chưa
+    try:
+        collections = qdrant_client.get_collections().collections
+        if not any(c.name == collection_name for c in collections):
+            print(f"Collection {collection_name} chưa tồn tại. Bỏ qua bước xóa chỉ mục cũ.")
+            return []
+    except Exception as ec:
+        print(f"Lỗi khi kiểm tra collections trong update_points: {ec}")
+        return []
+
+    must_conditions = [
+        FieldCondition (
+            key = "metadata.source",
+            match = MatchValue(value=name_software)
+        )
+    ]
+    if version_software is not None:
+        must_conditions.append(
             FieldCondition (
                 key = "metadata.version",
                 match = MatchValue(value=version_software)
             )
-        ]
+        )
+        
+    filter_condition = Filter (
+        must = must_conditions
     )
     
     # Lay danh sach docs_id

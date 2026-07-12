@@ -4,9 +4,8 @@ from . import model_response
 from . import embedding
 
 
-# Danh sách các model
+# Danh sách các model (chỉ hỗ trợ LLaMA)
 model_dispatch = {
-    "gemma2-9b-it": model_response.response_of_gemma2,
     "llama-3.1-8b-instant": model_response.response_of_llama3_instant,
     "llama-3.3-70b-versatile": model_response.response_of_llama3_70b,
 }
@@ -22,70 +21,70 @@ model_dispatch = {
 #     return cleaned_contexts
 
 
-def get_context_with_hybrid_retriever(question: str, source, weights=[0.7, 0.3]):
+def get_context_with_hybrid_retriever(question: str, sources, weights=[0.7, 0.3]):
     """
-    Retrieve context using hybrid retriever (dense + sparse) or fallback to multivector only
-    
+    Retrieve context using hybrid retriever (dense + sparse) for one or multiple sources.
+
     Args:
         question: User query
-        source: Document source
-        use_hybrid: Whether to use hybrid retrieval or just dense
-        weights: [dense_weight, sparse_weight] for hybrid retrieval
-    
+        sources: str | list[str] — tên tài liệu (không có .pdf)
+        weights: [dense_weight, sparse_weight]
+
     Returns:
         Cleaned context string
     """
     try:
-        retriever = embedding.create_hybrid_retriever(source, id_key="doc_id", k=2, weights=weights)  # Increased k
-        print(f"Using hybrid retriever for source: {source}")
-            
+        retriever = embedding.create_hybrid_retriever(sources, id_key="doc_id", k=2, weights=weights)
+        label = sources if isinstance(sources, str) else ", ".join(sources)
+        print(f"Using hybrid retriever for sources: {label}")
+
         contexts = retriever.invoke(question)
-        # Enhanced context formatting to preserve more information
         cleaned_contexts = "\n\n" + "="*80 + "\n\n".join([
-            f"📄 DOCUMENT CHUNK {i+1}:\n{str(context)}" 
+            f"&&  DOCUMENT CHUNK {i+1}:\n{str(context)}"
             for i, context in enumerate(contexts)
         ]) + "\n\n" + "="*80
         return cleaned_contexts
-        
-    except Exception as e:
-        print(f"Error in hybrid retrieval, falling back to multivector: {str(e)}")
-        # Fallback to original multivector approach
-        # return get_context_with_multivector(question, source)
-        return
 
-def query_with_rag_use_qdrant (question: str, source: str, model: str, hybrid_weights: list = [0.7, 0.3]) ->str:
-    
-    if source == "" or not source:
+    except Exception as e:
+        print(f"Error in hybrid retrieval, falling back: {str(e)}")
+        return None
+
+def query_with_rag_use_qdrant(question: str, sources, model: str, hybrid_weights: list = [0.7, 0.3]) -> str:
+    """
+    Thực thi RAG pipeline.
+
+    Args:
+        question: câu hỏi của người dùng
+        sources: str | list[str] — tên tài liệu không có .pdf
+                 Ví dụ: "TaiLieuA" hoặc ["TaiLieuA", "TaiLieuB"]
+        model: tên model LLM
+        hybrid_weights: trọng số [dense, sparse]
+    """
+    # Chặn luồng nếu sources rỗng — KHÔNG gọi Qdrant, KHÔNG gọi LLM
+    if not sources or sources == "" or (isinstance(sources, list) and len(sources) == 0):
         return "Xin chào, Bạn vui lòng chọn tài liệu ở trên để mình hướng dẫn nhé!"
-    
-    if model == "" or not model:
+
+    if not model:
         return "Xin chào, Bạn vui lòng chọn model nào để xem kết quả phản hồi nhé!"
-    
-    if question == "" or not question:
+
+    if not question:
         return "Xin chào, Bạn vui lòng cho mình biết bạn muốn hỏi gì nhé!"
-    
-    try: 
-        contexts = get_context_with_hybrid_retriever(question, source, weights=hybrid_weights) 
-        
-        # if not context
-        if not contexts :
-            excerpts = "Không tìm thấy thông tin phù hợp từ PDF"
-        else:
-            excerpts  = contexts
-                         
+
+    try:
+        contexts = get_context_with_hybrid_retriever(question, sources, weights=hybrid_weights)
+        excerpts = contexts if contexts else "Không tìm thấy thông tin phù hợp từ PDF"
     except Exception as e:
         excerpts = "Không tìm thấy dữ liệu phù hợp từ PDF."
         print("[WARN] Không tìm thấy dữ liệu từ PDF.")
         print("Loại lỗi:", type(e).__name__)
         print("Chi tiết:", str(e))
         traceback.print_exc()
-        
+
     response_fn = model_dispatch.get(model)
-    if (response_fn):
-        return response_fn (question,excerpts)
-    else:  
+    if response_fn:
+        return response_fn(question, excerpts)
+    else:
         return f"⚠️ Model '{model}' chưa được hỗ trợ."
-    
 
 def print_debug (retrieves_docs,filtered_chunk):   
     print("\n📌 [STEP 1] Các chunk được Qdrant truy xuất (top 5):\n")

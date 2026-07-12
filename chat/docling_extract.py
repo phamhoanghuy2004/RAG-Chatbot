@@ -1,80 +1,28 @@
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
-    PdfPipelineOptions,
-)
+from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
-import re
-from . import summary
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
-import os
-import base64
+from docling.chunking import HybridChunker
 import torch
+from . import summary
 
 
-def get_list_header (docling_documents):
-    list_header = []
-    for item in docling_documents.texts:
-        if item.label == "section_header":
-            list_header.append(item.text)
-    return list_header
-
-def filter_header (list_header):
-    pattern =  pattern = r"^[0-9A-Z][a-zA-Z0-9À-Ỹà-ỹĐđ\s._/,-]*$"
-    filtered_header = []
-    for header in list_header:
-        header = header.strip()
-        if header and len(header) > 2 and re.match(pattern,header):
-            filtered_header.append(header)
-        
-    return filtered_header
-
-def in_list_header (line, list_header): 
-    if not line:
-        return False
-    if not line[0] == '#':
-        return False
-    return any (header in line for header in list_header)
-
-def extract_context_by_headings(markdown_text, list_header):
-    contexts = []
-    current = ""
-    lines = markdown_text.split('\n')
-    
-    for line in lines:
-        if in_list_header (line,list_header):  # Phát hiện tiêu đề
-            if current:  # Lưu chunk trước đó nếu có
-                contexts.append(current)
-            current = line.strip() + "\n"  # Bắt đầu chunk mới với tiêu đề
-        else:
-            current +=  line.strip() + "\n" # Thêm nội dung vào chunk hiện tại
-    
-    # Lưu chunk cuối cùng
-    if current:
-        contexts.append(current)
-    
-    return contexts
-
-def chunk_by_title (pdf_text_as_markdown : str, list_header):
-    filtered_headers = filter_header (list_header)
-    contexts = extract_context_by_headings (pdf_text_as_markdown, filtered_headers) # mang cac context theo title
-    summarize_chain = summary.create_summarize_chain (bypass_summary=False)
-    summaries = summarize_chain.batch(contexts, {"max_concurrency" : 1}) 
-    return contexts, summaries   
-    
-def extract_text_by_docling (pdf_path: str):
-    
-    # Mẫu converter 1: PyPdfium without EasyOCR
+def extract_text_by_docling(pdf_path: str):
+    """
+    Extracts text from PDF using Docling DocumentConverter.
+    Image extraction is turned off for lighter processing.
+    """
     pipeline_options = PdfPipelineOptions()
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = True
     pipeline_options.table_structure_options.do_cell_matching = True
+    
     device = AcceleratorDevice.CUDA if torch.cuda.is_available() else AcceleratorDevice.CPU
-    pipeline_options.accelerator_options = AcceleratorOptions (
-        device=device
-    )
-    pipeline_options.generate_picture_images = True  # Bật trích xuất hình ảnh
-    pipeline_options.images_scale = 2  # Phóng to hình ảnh gấp đôi
+    pipeline_options.accelerator_options = AcceleratorOptions(device=device)
+    
+    # Disable image generation to speed up parsing
+    pipeline_options.generate_picture_images = False
 
     doc_converter = DocumentConverter(
         format_options={
@@ -85,43 +33,92 @@ def extract_text_by_docling (pdf_path: str):
     )
     
     result = doc_converter.convert(pdf_path)
-    
     return result
 
 
-def extract_images (docling_documents, images_dir,  name_software, version_software, url_prefix="/extracted_images/"):
-    # Tạo đường dẫn thư mục lưu lại hình ảnh
-    if not os.path.exists(images_dir):
-        os.makedirs(images_dir)
+def chunk_by_title(docling_result):
+    """
+    Parent-Child Retrieval / Map-Reduce RAG Chunking:
+    Sử dụng HybridChunker của Docling với max_tokens cực lớn (1.000.000)
+    để gom toàn bộ nội dung dưới mỗi Heading/Title thành đúng 1 chunk duy nhất.
 
-    image_paths = []
+    Thuật toán HybridChunker: gom tất cả đoạn văn có chung Tiêu đề,
+    chỉ dừng khi gặp Tiêu đề mới HOẶC chạm max_tokens.
+    → max_tokens khổng lồ = chỉ cắt tại ranh giới heading.
 
-    for i, pic in enumerate(docling_documents.pictures):
-        uri_str = str(pic.image.uri)
-        base64_str = uri_str.split(",")[1]
-        # giải mã base64 thành dữ liệu nhị phân
-        image_data = base64.b64decode(base64_str)
-        
-        fileName = f"image_{name_software}_{version_software}_{i}.png"
-        filePath = os.path.join(images_dir,fileName)
-        
-        #Lưu file hình ảnh
-        with open(filePath, "wb") as f:
-            f.write(image_data)
-            
-        # Thêm vào mãng image_paths
-        image_paths.append(f"{url_prefix}{fileName}")
-        
-    return image_paths
+    Bước summarize phía sau sẽ lo việc nén các chunk dài.
+    """
+    doc = docling_result.document
 
-def replace_img_html (image_paths, pdf_as_markdown):
-    index = 0
-    lines = pdf_as_markdown.splitlines()
-    result_lines = []
-    for line in lines:
-        if line.strip() == "<!-- image -->" and index < len(image_paths):
-            result_lines.append(f"<img src='{image_paths[index]}' alt='picture' class='pictureResponse' />")
-            index = index + 1
+    chunker = HybridChunker(
+        max_tokens=1_000_000,   # Cực lớn → chỉ split khi gặp Heading mới
+        merge_peers=True,       # Gom các đoạn cùng cấp heading lại với nhau
+    )
+
+    chunks = list(chunker.chunk(doc))
+
+    if not chunks:
+        print("⚠️ HybridChunker không tạo được chunk nào!")
+        return [], []
+
+    # Xây dựng danh sách contexts: mỗi chunk = heading path + nội dung
+    contexts = []
+    for i, chunk in enumerate(chunks):
+        headings = []
+        if chunk.meta and hasattr(chunk.meta, 'headings') and chunk.meta.headings:
+            headings = chunk.meta.headings
+
+        title = " > ".join(headings) if headings else f"Phần {i + 1}"
+
+        # Gắn heading path vào đầu chunk để giữ ngữ cảnh khi retrieve
+        context_text = f"## {title}\n\n{chunk.text}"
+        contexts.append(context_text)
+
+    # =================== LOG KẾT QUẢ PHÂN ĐOẠN ===================
+    print(f"\n{'=' * 90}")
+    print(f"  KẾT QUẢ PHÂN ĐOẠN THEO TITLE (HybridChunker) — {len(contexts)} chunks")
+    print(f"{'=' * 90}")
+    for idx, ctx in enumerate(contexts):
+        print(f"\n--- [CHUNK {idx + 1}/{len(contexts)}] (Độ dài: {len(ctx)} ký tự) ---")
+        # Chỉ in 500 ký tự đầu để log không quá dài
+        preview = ctx[:500].strip()
+        if len(ctx) > 500:
+            preview += "\n... (đã cắt bớt để hiển thị)"
+        print(preview)
+        print("-" * 80)
+    print(f"{'=' * 90}\n")
+
+    # =================== SUMMARIZE TỪNG CHUNK ===================
+    summarize_chain = summary.create_summarize_chain(bypass_summary=False)
+    summaries = []
+    import time
+
+    for i, ctx in enumerate(contexts):
+        # Proactive sleep to prevent hitting TPM limits on large documents
+        if i > 0:
+            time.sleep(1.0)
+
+        print(f"📝 Summarizing chunk {i + 1}/{len(contexts)} ({len(ctx)} ký tự)...")
+        retries = 4
+        delay = 2.0
+        while retries > 0:
+            try:
+                summary_text = summarize_chain.invoke(ctx)
+                summaries.append(summary_text)
+                break
+            except Exception as e:
+                err_str = str(e).lower()
+                if "rate limit" in err_str or "429" in err_str or "rate_limit_exceeded" in err_str:
+                    print(f"⏳ Rate limit hit at chunk {i + 1}. Retrying in {delay}s... (Retries left: {retries})")
+                    time.sleep(delay)
+                    delay *= 2.0  # Exponential backoff
+                    retries -= 1
+                else:
+                    print(f"❌ Error summarizing chunk {i + 1}: {e}")
+                    summaries.append(ctx)  # Fallback to original text
+                    break
         else:
-            result_lines.append(line)
-    return "\n".join(result_lines)
+            print(f"❌ Failed to summarize chunk {i + 1} after retries. Using original text as summary.")
+            summaries.append(ctx)  # Fallback to original text
+
+    return contexts, summaries
