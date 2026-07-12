@@ -75,12 +75,7 @@ def _generic_response(question, excerpts, model_name, assistant_name):
     except Exception as ex:
         return f"Lỗi gọi LLM: {str(ex)}"
     
-def response_of_gemma2 (question, excerpts):
-    return _generic_response(
-        question, excerpts,
-        model_name="gemma2-9b-it",
-        assistant_name="Trợ lý RAG dùng Gemma 2 9B"
-    )
+
 
 
 def response_of_llama3_instant (question, excerpts):

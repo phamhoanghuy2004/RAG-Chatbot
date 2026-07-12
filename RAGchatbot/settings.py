@@ -20,18 +20,19 @@ import datetime
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Khởi tạo
 env = environ.Env()
-# Chỉ định rõ đường dẫn file .env
-env.read_env(os.path.join(BASE_DIR, ".env"))
 
+env_file = BASE_DIR / ".env"
+
+if env_file.exists():
+    env.read_env(env_file)
 
 # JWT
 ACCESS_TOKEN_LIFETIME = datetime.timedelta(minutes=env.int("ACCESS_TOKEN_LIFETIME", default=15))
 SECURE_COOKIE = env.bool("SECURE_COOKIE", default=False)
 SECRET_KEY_JWT = env("SECRET_KEY_JWT")
 
-# File size 
+# File size
 MAX_MB = env.int("MAX_MB", default=20)
 
 # Embedding model
@@ -59,12 +60,18 @@ DB_SSL_CA = os.path.join(BASE_DIR, "certs", "ca.pem")
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-v()x6jbow+&gt6%ly=9k+uemx%#vj%-lr9l5!632c(^9qc^p&#'
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = []
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=["157.245.205.7", "localhost", "127.0.0.1"]
+)
 
 
 # Application definition
@@ -117,7 +124,7 @@ WSGI_APPLICATION = 'RAGchatbot.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {  
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
         'HOST': env("DB_HOST"),
         'PORT': env.int("DB_PORT"),
@@ -173,3 +180,14 @@ EXTRACTED_IMAGES_ROOT = BASE_DIR / 'extracted_images'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://157.245.205.7",
+]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+}

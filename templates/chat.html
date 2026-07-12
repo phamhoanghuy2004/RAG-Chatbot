@@ -38,7 +38,9 @@
   </div>
 
   <div class="chatgpt-greeting" id="chat-greeting">
-    <span>👋 XIN CHÀO, BẠN MUỐN MÌNH HƯỚNG DẪN TÀI LIỆU NÀO?</span>
+    <div class="greeting-icon">🎓</div>
+    <span class="greeting-title">Xin chào! Mình có thể giúp bạn giải đáp thắc mắc về Tiếng Anh</span>
+    <span class="greeting-subtitle">Hãy đặt câu hỏi bất kỳ, mình sẽ hỗ trợ bạn ngay nhé!</span>
   </div>
   <div class="chatgpt-container">
     <div class="chatgpt-header">
@@ -47,9 +49,9 @@
         <span>RAG CHATBOT</span>
       </div>
       <div class="doc-select-group">
-        <span>BẠN ĐANG LÀM VIỆC VỚI TÀI LIỆU NÀO:</span>
+        <span>📚 Chuyên sâu hơn về:</span>
         <select id="doc-select">
-          <option value="">Chọn tài liệu</option>
+          <option value="">Tất cả tài liệu</option>
           {% for doc in docs %}
           <option value="{{ doc }}">{{ doc }}</option>
           {% endfor %}
@@ -80,11 +82,8 @@
     <form id="chat-form" class="chatgpt-input-form">
       <span class="model-label">Model</span>
       <select id="model-select" class="model-select">
-        <option value="gemma2-9b-it">gemma2</option>
         <option value="llama-3.1-8b-instant">llama-3.1</option>
         <option value="llama-3.3-70b-versatile">llama-3.3</option>
-        <option value="compare:gemma2-9b-itVSllama-3.1-8b-instant">gemma2 VS llama-3.1</option>
-        <option value="compare:gemma2-9b-itVSllama-3.3-70b-versatile">gemma2 VS llama-3.3</option>
         <option value="compare:llama-3.1-8b-instantVSllama-3.3-70b-versatile">llama-3.1 VS llama-3.3</option>
       </select>
 <!--       

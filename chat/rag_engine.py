@@ -4,9 +4,8 @@ from . import model_response
 from . import embedding
 
 
-# Danh sách các model
+# Danh sách các model (chỉ hỗ trợ LLaMA)
 model_dispatch = {
-    "gemma2-9b-it": model_response.response_of_gemma2,
     "llama-3.1-8b-instant": model_response.response_of_llama3_instant,
     "llama-3.3-70b-versatile": model_response.response_of_llama3_70b,
 }
@@ -61,7 +60,8 @@ def query_with_rag_use_qdrant(question: str, sources, model: str, hybrid_weights
         model: tên model LLM
         hybrid_weights: trọng số [dense, sparse]
     """
-    if not sources or sources == "":
+    # Chặn luồng nếu sources rỗng — KHÔNG gọi Qdrant, KHÔNG gọi LLM
+    if not sources or sources == "" or (isinstance(sources, list) and len(sources) == 0):
         return "Xin chào, Bạn vui lòng chọn tài liệu ở trên để mình hướng dẫn nhé!"
 
     if not model:
