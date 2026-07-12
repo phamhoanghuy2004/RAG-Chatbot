@@ -94,8 +94,8 @@ chatForm.onsubmit = async function (e) {
         chatGreeting.style.display = 'none';
     }
 
-    // Nếu chưa chọn tài liệu → gán mặc định "Tai_Lieu_Full_Part"
-    const selectedSource = docSelect.value || "Tai_Lieu_Full_Part";
+    // Nếu chưa chọn tài liệu → gán mặc định "Tai_Lieu_Full_Part.pdf"
+    const selectedSource = docSelect.value || "Tai_Lieu_Full_Part.pdf";
     const selectedModel = modelSelect.value;
 
     // Hiển thị câu hỏi của người dùng

@@ -200,10 +200,6 @@ def chat(request):
         if not Document.objects.filter(document_name=doc_name).exists():
             return JsonResponse({"error": f"Tài liệu {doc_name} không tồn tại hoặc chưa được xử lý!"}, status=400)
     
-    # # Optional hybrid retrieval parameters
-    # use_hybrid = data.get('use_hybrid', False)  # Default to False for backward compatibility
-    # hybrid_weights = data.get('hybrid_weights', [0.7, 0.3])  # Dense, Sparse weights
-    
     name_software = [os.path.splitext(s)[0] for s in sources_list]
             
     start_time = time.time()
