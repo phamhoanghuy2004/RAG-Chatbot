@@ -54,7 +54,7 @@ uploadForm.onsubmit = async function (e) {
     loadingSpinner.style.display = 'flex';
     const formData = new FormData(uploadForm);
     try {
-        const res = await fetch('/api/upload/', {
+        const res = await fetch('/rag/api/upload/', {
             method: 'POST',
             body: formData
         });
@@ -69,7 +69,7 @@ uploadForm.onsubmit = async function (e) {
                 showConfirm(
                     "⚠ Vui lòng đăng nhập để thực hiện hành động!",
                     function () {
-                        window.location.href = "/api/loginPage/";
+                        window.location.href = "/rag/api/loginPage/";
                     }
                 );
             } else {
@@ -119,7 +119,7 @@ chatForm.onsubmit = async function (e) {
         const [model1, model2] = selectedModel.replace("compare:", "").split("VS");
 
         try {
-            const res = await fetch('/api/chat/compare/', {
+            const res = await fetch('/rag/api/chat/compare/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -207,7 +207,7 @@ chatForm.onsubmit = async function (e) {
             //     requestData.hybrid_weights = [denseWeightValue, sparseWeightValue];
             // }
             
-            const res = await fetch('/api/chat/', {
+            const res = await fetch('/rag/api/chat/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -367,7 +367,7 @@ function appendFeedbackForm(logId) {
             return;
         }
         try {
-            const res = await fetch('/api/feedback/', {
+            const res = await fetch('/rag/api/feedback/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -390,7 +390,7 @@ function appendFeedbackForm(logId) {
                     showConfirm(
                         "⚠ Vui lòng đăng nhập để thực hiện hành động!",
                         function () {
-                            window.location.href = "/api/loginPage/";
+                            window.location.href = "/rag/api/loginPage/";
                         }
                     );
                 } else {

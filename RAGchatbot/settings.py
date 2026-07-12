@@ -185,9 +185,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 CSRF_TRUSTED_ORIGINS = [
     "http://157.245.205.7",
+    "http://157.245.205.7/rag",
 ]
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
 }
+
+FORCE_SCRIPT_NAME = '/rag'
