@@ -11,7 +11,7 @@ form.addEventListener('submit', async (e) => {
     };
 
     try {
-        const res = await fetch('/api/login/', {
+        const res = await fetch('/rag/api/login/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

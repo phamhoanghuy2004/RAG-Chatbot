@@ -33,7 +33,7 @@ async function savePrompt(e) {
     const is_active = document.getElementById("is_active").checked;
 
     try {
-        const res = await fetch("/api/addprompt/", {
+        const res = await fetch("/rag/api/addprompt/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -59,7 +59,7 @@ async function savePrompt(e) {
                 showConfirm(
                     "⚠ Vui lòng đăng nhập để thực hiện hành động!",
                     function () {
-                        window.location.href = "/api/loginPage/";
+                        window.location.href = "/rag/api/loginPage/";
                     }
                 );
             } else {
